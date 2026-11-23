@@ -1,0 +1,11 @@
+{
+  "theme": {
+    "colors": {
+      "primary": "#00AA00"
+    },
+    "shape": {
+      "cardRadius": 12,
+      "ctaRadius": 99
+    }
+  }
+}

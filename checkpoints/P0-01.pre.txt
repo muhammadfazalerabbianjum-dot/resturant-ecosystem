@@ -1,0 +1,77 @@
+ M DESIGN.md
+ M GENERATOR_BRANDING_MAP.md
+ M WHITE_LABEL_p35_depth_dark.md
+ M core_app/CHANGELOG.md
+ M core_app/DEFERRED.md
+ M tool_uilib/p32/ops_captures/manager_dashboard.png
+?? .aiderignore
+?? .claude/
+?? .clinerules/gortex-communities.md
+?? .continue/
+?? .cursor/
+?? .gemini/
+?? .github/copilot-instructions.md
+?? .github/skills/
+?? .impeccable/
+?? .kimi-code/
+?? .vscode/mcp.json
+?? .windsurfrules
+?? AGENTS.md
+?? CLAUDE.md
+?? CONVENTIONS.md
+?? GEMINI.md
+?? WHITE_LABEL_p27_constitution.md
+?? WHITE_LABEL_p32_golden_gates.md
+?? WHITE_LABEL_p33_config_deadkeys.md
+?? checkpoints/
+?? docs/ORCHESTRATOR_BRIEF.md
+?? docs/ORCHESTRATOR_HANDOFF.md
+?? docs/P0-PROMPT.md
+?? docs/PLATFORM_EXPANSION_EVIDENCE.md
+?? docs/PLATFORM_EXPANSION_PLAN.md
+?? gate.cmd
+?? gate_config.json
+?? tool/
+?? tool_uilib/AUDIT_coverage_core_app.txt
+?? tool_uilib/AUDIT_test_rigor.txt
+?? tool_uilib/AUDIT_test_rigor_v2.txt
+?? tool_uilib/STATUS_REPORT_p34_closeout_2026-10-11.md
+?? tool_uilib/gen_proof/
+?? tool_uilib/p31/receipts/apk_build_err.txt
+?? tool_uilib/p31/receipts/apk_build_out.txt
+?? tool_uilib/p31/receipts/fresh_core_app_analyze.txt
+?? tool_uilib/p31/receipts/fresh_core_app_suite.txt
+?? tool_uilib/p31/receipts/fresh_core_app_suite_err.txt
+?? tool_uilib/p31/receipts/fresh_core_pkg.txt
+?? tool_uilib/p31/receipts/fresh_core_ui_pkg.txt
+?? tool_uilib/p31/receipts/fresh_full_audit_index.txt
+?? tool_uilib/p31/receipts/fresh_halal_gates.txt
+?? tool_uilib/p33/DISPATCH_p33.txt
+?? tool_uilib/p33/halal_apk_recheck.txt
+?? tool_uilib/p34_e2e/battery_final_p1.txt
+?? tool_uilib/p34_e2e/halal_16kb_build.txt
+?? tool_uilib/p34_e2e/p4_anon_probe.txt
+?? tool_uilib/p34_e2e/p4_anon_probe2.txt
+?? tool_uilib/p34_e2e/p4_anon_probe3.txt
+?? tool_uilib/p34_e2e/p4_fbemu.txt
+?? tool_uilib/p34_e2e/p4_owner_probe.txt
+?? tool_uilib/p34_e2e/p4_twocycle_fix.txt
+?? tool_uilib/p34_e2e/p4_twocycle_probe.txt
+?? tool_uilib/p34_e2e/v13_email_ordermodel_green.txt
+?? tool_uilib/p34_e2e/v13_guest_probe_run.txt
+?? tool_uilib/p34_e2e/v13_guest_split_green.txt
+?? tool_uilib/p34_e2e/v13_guestonly.txt
+?? tool_uilib/p34_e2e/v13_guestonly2.txt
+?? tool_uilib/p34_e2e/v13_real_recheck.txt
+?? tool_uilib/p34_e2e/v13_vm_stack.txt
+?? tool_uilib/p34_e2e/v13_vm_stack2.txt
+?? tool_uilib/p34_e2e/v15_recheck.txt
+?? tool_uilib/p34_e2e/vm_stack_probe.ps1
+?? tool_uilib/p35/core_app_default.txt
+?? tool_uilib/p35/debt_functions_gate.txt
+?? tool_uilib/p35/device_light.png
+?? tool_uilib/p35/dryrun.txt
+?? tool_uilib/p35/functions.txt
+?? tool_uilib/p35/p35_closeout_core_ui_full.txt
+?? tool_uilib/p35/p35_closeout_default_tier.txt
+?? tool_uilib/p35/p35_dp35_1_full_suite.txt

@@ -1,0 +1,132 @@
+name: labs
+description: "A new Flutter project."
+publish_to: 'none'
+resolution: workspace
+
+version: 1.1.0+2
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  core:
+    path: ../packages/core
+  core_ui:
+    path: ../packages/core_ui
+
+  cupertino_icons: ^1.0.8
+  riverpod: ^2.5.1
+  flutter_riverpod: ^2.5.1
+  go_router: ^14.2.0
+  # p34 A-fix (16 KB): isar 3.1.0+1's prebuilt libisar.so is 4 KB-aligned
+  # (PAGE_SIZE_APP_COMPAT_FLAG_ELF_NOT_ALIGNED + PageSizeMismatchDialog on
+  # 16 KB devices); the community fork ships 16 KB-aligned core binaries.
+  # Generator note: isar_community_generator needs source_gen ^4/build ^4,
+  # which collides with flutter_stripe 11.5.0's freezed_annotation ^2.4.1
+  # chain — see DEFERRED.md D-P34-1. isar_schemas.g.dart stays as committed
+  # (v3 API drop-in; part file inherits the parent's community import).
+  isar_community: ^3.3.2
+  isar_community_flutter_libs: ^3.3.2
+  path_provider: ^2.1.5
+  dio: ^5.9.2
+  google_fonts: ^8.0.2
+  firebase_core: ^4.7.0
+  firebase_auth: ^6.4.0
+  cloud_firestore: ^6.3.0
+  firebase_messaging: ^16.2.0
+  firebase_analytics: ^12.3.0
+  url_launcher: ^6.3.2
+  lottie: ^3.3.3
+  flutter_animate: ^4.5.2
+  confetti: ^0.8.0
+  cached_network_image: ^3.4.1
+
+
+  shared_preferences: any
+  geolocator: ^13.0.0
+  flutter_local_notifications: ^17.0.0
+  fl_chart: ^1.2.0
+  rxdart: ^0.28.0
+  cloud_functions: ^6.2.0
+  firebase_crashlytics: ^5.2.0
+  firebase_performance: ^0.11.3
+  intl: ^0.20.2
+  firebase_app_check: ^0.4.3
+  flutter_stripe: ^11.5.0
+  geoflutterfire_plus: ^0.0.34
+  firebase_remote_config: ^6.4.0
+  package_info_plus: ^10.1.0
+  image_picker: ^1.2.2
+  firebase_storage: ^13.3.0
+  workmanager: ^0.9.0+3
+  in_app_review: ^2.0.11
+  flutter_map: ^8.3.0
+  latlong2: ^0.9.1
+  geocoding: ^4.0.0
+  flutter_dotenv: ^5.1.0
+  freezed_annotation: any
+  json_annotation: any
+  app_links: ^7.0.0
+  shorebird_code_push: ^2.0.6
+  sign_in_with_apple: ^6.1.4
+  google_sign_in: ^6.2.2
+  app_tracking_transparency: ^2.0.6
+  crypto: ^3.0.3
+  http_interceptor: any
+  shimmer: ^3.0.0
+  http: ^1.6.0
+  uuid: any
+  share_plus: any
+  connectivity_plus: ^7.3.1
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  # p34 A-fix (16 KB): generator dropped — isar_community_generator requires
+  # source_gen ^4/build ^4, incompatible with this workspace's freezed 2.x
+  # chain (flutter_stripe 11.5.0). Regen gap tracked in DEFERRED.md D-P34-1.
+  build_runner: any
+  mockito: any
+  # Property-based / fuzz testing
+  faker: ^2.2.0
+  # Chaos engineering & Firestore unit tests
+  fake_cloud_firestore: 4.2.0
+  flutter_launcher_icons: ^0.14.4
+
+  mocktail: any
+  cloud_firestore_platform_interface: any
+  firebase_auth_mocks: any
+  integration_test:
+    sdk: flutter
+  network_image_mock: ^2.1.1
+  freezed: any
+  json_serializable: any
+  patrol: any
+  checks: ^0.3.1
+
+  firebase_core_platform_interface: any
+flutter:
+  generate: true
+  assets:
+    - assets/
+  uses-material-design: true
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logo.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
+
+flutter_native_splash:
+  color: "#FF6B00"
+  image: "assets/logo_nobackground.png"
+  android: true
+  ios: true
+
+dependency_overrides:

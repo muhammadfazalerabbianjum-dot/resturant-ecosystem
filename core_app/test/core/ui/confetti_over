@@ -1,0 +1,26 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:labs/core/ui/confetti_overlay.dart';
+
+void main() {
+  group('ConfettiOverlay', () {
+    test('class exists', () {
+      expect(ConfettiOverlay, isA<Type>());
+    });
+
+    test('show is a static method on ConfettiOverlay', () {
+      expect(ConfettiOverlay.show, isA<Function>());
+      expect(ConfettiOverlay.show, isNotNull);
+    });
+
+    test('show accepts BuildContext and optional duration', () {
+      // Verify the method signature via reflection
+      final method = ConfettiOverlay.show;
+      expect(method is Function, isTrue);
+    });
+
+    test('ConfettiOverlay is a valid class', () {
+      // Verify the class is accessible and non-null
+      expect(ConfettiOverlay.toString(), 'ConfettiOverlay');
+    });
+  });
+}

@@ -1,0 +1,56 @@
+{
+  "$comment": "Line-coverage floors per source file, enforced by scripts/check_coverage_floor.mjs (gate g). Every file under src/ must have a row here; a file with no row is an ERROR, and an unregistered file has no floor below 90. Values recorded on 2026-11-09 by measuring the pre-existing suite (see checkpoints/P0-09.md): the legacy numbers are today's truth, not a target. Floors only ever move up — `node scripts/check_coverage_floor.mjs --raise` rewrites them from a measured run and refuses to lower any.",
+  "defaultLines": 90,
+  "totalLines": 60.14,
+  "files": {  "src/access.ts": {
+   "lines": 100
+  },
+  "src/permissions.ts": {
+   "lines": 90,
+   "note": "P1-1 new file; the table is data and its tests are the matrix in test/permissions.test.js."
+  },
+  "src/migrations/plans.ts": {
+   "lines": 100,
+   "note": "P1-6 new file: the backfill decisions, 100% lines. 'A second run changes zero documents' is asserted here, not observed."
+  },
+  "src/migrations/v004__tenancy_backfill.ts": {
+   "lines": 94,
+   "note": "P1-6 wrapper around the planner; the fireway `migrate` entrypoint cannot run without a project, so it is the only uncovered part."
+  },
+  "src/migrations/v005__roles_backfill.ts": {
+   "lines": 90,
+   "note": "P1-6 wrapper around the planner; same shape and same single uncovered entrypoint as v004."
+  },
+  "src/claims.ts": {
+   "lines": 100,
+   "note": "P1-5 new file: 100% lines, 96.55% branches; the claim shape and the stale-token denial are asserted in test/claims.test.js."
+  },
+  "src/rollups.ts": {
+   "lines": 100,
+   "note": "P1-3 new file: 100% lines, 91.66% branches; the cache-is-a-cache claim is asserted in test/reversal_rollups.test.js U-1."
+  },
+  "src/ledger.ts": {
+   "lines": 100,
+   "note": "P1-2 new file: 100% lines, 93.75% branches; the emulator lane (gate d) adds the transactional proof the unit lane cannot."
+  },
+    "src/ddos.ts": { "lines": 100 },
+    "src/idempotency.ts": { "lines": 100 },
+    "src/index.ts": {
+      "lines": 22.3,
+      "note": "Legacy Cloud Functions entrypoint monolith (2282 lines). Handlers are exercised end-to-end only in production paths; this floor freezes it so P0+ cannot make it worse. Raising it is a P1+ task."
+    },
+    "src/notification_copy.ts": { "lines": 98.85 },
+    "src/payment.ts": { "lines": 95.55 },
+    "src/platform_availability.ts": { "lines": 94.11 },
+    "src/platform_ingestion.ts": { "lines": 90.36 },
+    "src/platform_mappers/deliveryHero.ts": { "lines": 88.88 },
+    "src/platform_mappers/uberEats.ts": { "lines": 88.7 },
+    "src/payments/processor_adapter.ts": { "lines": 90 },
+    "src/migrations/v001__seed_branches.ts": {
+      "lines": 0,
+      "note": "One-shot admin migration script (run by hand against a project); no test imports it, so 0% is its measured truth. Registered rather than exempted so the completeness rule still sees it."
+    },
+    "src/migrations/v002__seed_admin_user.ts": { "lines": 0, "note": "One-shot admin migration script; see v001." },
+    "src/migrations/v003__seed_settings_owner_info.ts": { "lines": 0, "note": "One-shot admin migration script; see v001." }
+  }
+}

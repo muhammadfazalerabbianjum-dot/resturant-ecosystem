@@ -1,0 +1,811 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── App Check enforcement (Law 12 — Security by Least Privilege) ─
+    // B6-5: flag-gated strict mode. Default stays RELAXED (OR) during the
+    // Windows/web App Check enrollment transition; flipping
+    // `settings/featureFlags.strongAppCheck` to true enforces STRICT (AND) —
+    // both a registered `app_id` AND a valid `app_check_token` required for
+    // every non-public write. Short-circuits on a missing featureFlags doc or
+    // a doc whose `strongAppCheck` field is absent so neither can ever brick
+    // legitimate (relaxed-era / flag-absent) platforms.
+    function hasAppId() {
+      return request.auth != null && request.auth.token.app_id != null;
+    }
+
+    function hasAppCheckToken() {
+      return request.auth != null &&
+        request.auth.token.firebase.app_check_token != null;
+    }
+
+    function strongAppCheckEnabled() {
+      return exists(/databases/$(database)/documents/settings/featureFlags) &&
+        'strongAppCheck' in
+          get(/databases/$(database)/documents/settings/featureFlags).data &&
+        get(/databases/$(database)/documents/settings/featureFlags)
+          .data.strongAppCheck == true;
+    }
+
+    function isAppVerified() {
+      return request.auth != null &&
+        (strongAppCheckEnabled()
+          ? hasAppId() && hasAppCheckToken()
+          : hasAppId() || hasAppCheckToken());
+    }
+
+    // ── Auth helpers ─────────────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAnonymous() {
+      return isAuthenticated() &&
+        request.auth.token.firebase.sign_in_provider == 'anonymous';
+    }
+
+    function isOwner() {
+      return isAuthenticated() &&
+        !isAnonymous() &&
+        exists(/databases/$(database)/documents/settings/ownerInfo) &&
+        get(/databases/$(database)/documents/settings/ownerInfo).data.ownerEmail == request.auth.token.email;
+    }
+
+    function userRole() {
+      return (isAuthenticated() && !isAnonymous() &&
+              exists(/databases/$(database)/documents/users/$(request.auth.uid)))
+             ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+             : 'none';
+    }
+
+    function userBranch() {
+      return (isAuthenticated() && !isAnonymous() &&
+              exists(/databases/$(database)/documents/users/$(request.auth.uid)))
+             ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.branchId
+             : 'none';
+    }
+
+    // ── B0 shape helpers (P0-1/P0-2/P0-3) ──────────────────────────────
+    // Counter docs are written inside the booking/join TRANSACTIONS with an
+    // exact, deterministic key set:
+    //   reservation_counters/{branch}_{start} = {booked: int}
+    //     (reservations_repository.dart:51-55 — merge-set)
+    //   waitlist_counters/{branch} = {count: int, updatedAt: timestamp}
+    //     (waitlist_repository.dart:80-87 — merge-set)
+    //   branches/{branch}/waitlist_meta/meta = {nextTicket: int, nowServing: int}
+    //     (waitlist_repository.dart:118-121/152-155/197-200 — PERF-9 T-2)
+    function isValidReservationCounter(r) {
+      return r.keys().hasOnly(['booked']) &&
+        r.booked is int &&
+        r.booked >= 0;
+    }
+
+    function isValidWaitlistCounter(r) {
+      return r.keys().hasOnly(['count', 'updatedAt']) &&
+        r.count is int &&
+        r.count >= 0;
+    }
+
+    // PERF-9 T-2 (B-2): the branch TAKE-A-TICKET ordinal doc
+    // `branches/{bid}/waitlist_meta/meta` = {nextTicket: int, nowServing: int}
+    // written by the join/leave/serve transactions (waitlist_repository.dart:
+    // 118-121/152-155/197-200). `nextTicket` starts at 1 (tickets are 1-based);
+    // `nowServing` starts at 0 and never regresses.
+    function isValidWaitlistMeta(r) {
+      return r.keys().hasOnly(['nextTicket', 'nowServing']) &&
+        r.nextTicket is int &&
+        r.nextTicket >= 1 &&
+        r.nowServing is int &&
+        r.nowServing >= 0;
+    }
+
+    // PERF-9 coordinator closure: per-branch menu override docs
+    //   branches/{branchId}/menu_overrides/{canonicalItemId}
+    //     = {priceCents?: int >= 0, isAvailable?: bool}   (merged_menu_provider
+    //     overlay, W1/T-3: absence of a field = inherit from the global item).
+    // Read mirrors /menus (public browsing); writes mirror the /menus write
+    // pattern (owner, or a manager scoped to their own branch) with a strict
+    // shape lock; delete stays impossible (rotation = update).
+    function isValidMenuOverride(o) {
+      return o.keys().hasOnly(['priceCents', 'isAvailable']) &&
+        o.keys().size() > 0 &&
+        (!('priceCents' in o) || (o.priceCents is int && o.priceCents >= 0)) &&
+        (!('isAvailable' in o) || o.isAvailable is bool);
+    }
+
+    // Locations must carry a parseable geometry. Every layout the app reader
+    // accepts (packages/core LatLngParse) is allowed: top-level lat/lng,
+    // coordinates (GeoPoint | [lng, lat] | {lat/lng}), or geo.geopoint
+    // (geoflutterfire_plus index shape).
+    function hasValidGeometry(r) {
+      return (('lat' in r && r.lat is number) && ('lng' in r && r.lng is number)) ||
+        ('geo' in r && r.geo is map && 'geopoint' in r.geo && r.geo.geopoint is latlng) ||
+        ('coordinates' in r && (r.coordinates is latlng ||
+          (r.coordinates is list && r.coordinates.size() == 2) ||
+          (r.coordinates is map &&
+            ('latitude' in r.coordinates || 'lat' in r.coordinates) &&
+            ('longitude' in r.coordinates || 'lng' in r.coordinates))));
+    }
+
+    function isValidLocationShape(r) {
+      return r.name is string && r.name.size() > 0 &&
+        (!('address' in r) || r.address is string) &&
+        (!('openHours' in r) || r.openHours is string) &&
+        hasValidGeometry(r);
+    }
+
+    // settings/restaurantConfig is merge-written (saveRestaurantConfig /
+    // patchRestaurantConfig / panic switch), so the shape gate is a per-key
+    // type check over the model's known key set (restaurant_config_model.dart
+    // toFirestore:9-43) rather than a hasOnly — a partial merge save must not
+    // be denied by guessing keys. Hostile types / negative money are rejected.
+    // PERF-6b: structural-only shape for settings/taxRates. Dynamic
+    // per-client keys cannot be deep-validated in rules language; numeric
+    // bounds are enforced client-side (TaxRateValidationException) and
+    // server-side (computeTaxCents, unknown-state fail-closed).
+    function isValidTaxRatesShape(d) {
+      return d.keys().hasOnly(['clients']) &&
+        d.clients is map &&
+        d.clients.size() > 0;
+    }
+
+    function isValidRestaurantConfigShape(r) {
+      return
+        (!('restaurantName' in r) || (r.restaurantName is string && r.restaurantName.size() > 0)) &&
+        (!('tagline' in r) || r.tagline is string) &&
+        (!('contactEmail' in r) || r.contactEmail is string) &&
+        (!('contactPhone' in r) || r.contactPhone is string) &&
+        (!('address' in r) || r.address is string) &&
+        (!('currency' in r) || (r.currency is string && r.currency.size() > 0)) &&
+        (!('defaultLanguage' in r) || r.defaultLanguage is string) &&
+        (!('logoUrl' in r) || r.logoUrl == null || r.logoUrl is string) &&
+        (!('heroImageUrl' in r) || r.heroImageUrl == null || r.heroImageUrl is string) &&
+        (!('primaryColorHex' in r) || r.primaryColorHex == null || r.primaryColorHex is string) &&
+        (!('secondaryColorHex' in r) || r.secondaryColorHex == null || r.secondaryColorHex is string) &&
+        (!('appStoreName' in r) || r.appStoreName == null || r.appStoreName is string) &&
+        (!('appDescription' in r) || r.appDescription == null || r.appDescription is string) &&
+        (!('termsUrl' in r) || r.termsUrl == null || r.termsUrl is string) &&
+        (!('privacyUrl' in r) || r.privacyUrl == null || r.privacyUrl is string) &&
+        (!('allergenDisclaimerEnabled' in r) || r.allergenDisclaimerEnabled is bool) &&
+        (!('socialLinks' in r) || r.socialLinks is map) &&
+        (!('loyaltyProgramName' in r) || r.loyaltyProgramName is string) &&
+        (!('pointsPerDollar' in r) || (r.pointsPerDollar is int && r.pointsPerDollar >= 0)) &&
+        (!('redemptionThresholdPoints' in r) || (r.redemptionThresholdPoints is int && r.redemptionThresholdPoints >= 0)) &&
+        (!('goldThresholdPoints' in r) || (r.goldThresholdPoints is int && r.goldThresholdPoints >= 0)) &&
+        (!('redemptionValueCents' in r) || (r.redemptionValueCents is int && r.redemptionValueCents >= 0)) &&
+        (!('signupBonusPoints' in r) || (r.signupBonusPoints is int && r.signupBonusPoints >= 0)) &&
+        (!('notificationTone' in r) || r.notificationTone is string) &&
+        (!('notificationOptIn' in r) || r.notificationOptIn is string) &&
+        (!('minimumOrderCents' in r) || (r.minimumOrderCents is int && r.minimumOrderCents >= 0)) &&
+        (!('tipEnabled' in r) || r.tipEnabled is bool) &&
+        (!('serviceChargePercent' in r) || (r.serviceChargePercent is int && r.serviceChargePercent >= 0)) &&
+        (!('estimatedPrepTimeMinutes' in r) || (r.estimatedPrepTimeMinutes is int && r.estimatedPrepTimeMinutes >= 0)) &&
+        (!('deliveryFeeType' in r) || r.deliveryFeeType is string) &&
+        (!('deliveryFeeCents' in r) || (r.deliveryFeeCents is int && r.deliveryFeeCents >= 0)) &&
+        (!('freeDeliveryThresholdCents' in r) || (r.freeDeliveryThresholdCents is int && r.freeDeliveryThresholdCents >= 0)) &&
+        (!('operatingHours' in r) || r.operatingHours is map) &&
+        (!('ordersAccepting' in r) || r.ordersAccepting is bool);
+    }
+
+    // settings/defaultOperatingHours — exact key set from OperatingHoursModel
+    // .toMap() (packages/core operating_hours_model.dart:68-77), every day is
+    // a locked {isOpen, openTime, closeTime} map.
+    function isValidDayHours(d) {
+      return d is map &&
+        d.keys().hasOnly(['isOpen', 'openTime', 'closeTime']) &&
+        d.isOpen is bool &&
+        d.openTime is string &&
+        d.closeTime is string;
+    }
+
+    function isValidOperatingHoursShape(r) {
+      return r.keys().hasOnly(
+        ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'holidayModeEnabled']) &&
+        isValidDayHours(r.monday) &&
+        isValidDayHours(r.tuesday) &&
+        isValidDayHours(r.wednesday) &&
+        isValidDayHours(r.thursday) &&
+        isValidDayHours(r.friday) &&
+        isValidDayHours(r.saturday) &&
+        isValidDayHours(r.sunday) &&
+        r.holidayModeEnabled is bool;
+    }
+
+    // ── Panic Switch gate (B5) ────────────────────────────────────────
+    // Orders create is DENIED when the owner explicitly sets
+    // ordersAccepting to false. Missing doc or missing field = open
+    // (matches PanicSwitchService default ?? true).
+    function isOrdersAccepting() {
+      return !exists(/databases/$(database)/documents/settings/restaurantConfig) ||
+        !('ordersAccepting' in get(/databases/$(database)/documents/settings/restaurantConfig).data) ||
+        get(/databases/$(database)/documents/settings/restaurantConfig).data.ordersAccepting == true;
+    }
+
+    // ── PUBLIC READS (browsing requires no login — guest mode support) ──
+    // WHY: Customers and anonymous guests must browse menus, branches, and
+    //      promotions without an account. Law 12: security lives in rules, not Dart.
+    match /menus/{itemId} {
+      allow read: if true; // Public: menu browsing is unauthenticated
+
+      // C-3 FIX: branchId immutable on update; field validation on create/update
+      allow create: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        (isOwner() ||
+         (userRole() == 'manager' &&
+          request.resource.data.branchId == userBranch())) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.priceCents is int &&
+        request.resource.data.priceCents >= 0;
+
+      allow update: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        (isOwner() ||
+         (userRole() == 'manager' && resource.data.branchId == userBranch())) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['branchId']) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.priceCents is int &&
+        request.resource.data.priceCents >= 0;
+
+      allow delete: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        (isOwner() ||
+         (userRole() == 'manager' && resource.data.branchId == userBranch()));
+    }
+
+    match /branches/{branchId} {
+      allow read: if true; // Public: branch info is unauthenticated
+      // t78 (PERF-10 T-7): App-Check posture — mirrors the b10 P-6 sweep
+      // (carts-class gap: owner writes were the last un-gated surface family).
+      allow write: if isAppVerified() && isOwner();
+
+      // PERF-9 coordinator closure: the T-3 menu-override overlay. Without
+      // this lane the overlay merged by merged_menu_provider is DENIED for
+      // every reader (fail-soft => silently inert overrides at runtime).
+      // Read mirrors /menus (public, unauthenticated browsing); writes
+      // mirror the /menus write pattern (owner, or a manager scoped to their
+      // own branch) with the isValidMenuOverride shape lock; delete stays
+      // impossible (rotation = update/inherit-removal).
+      match /menu_overrides/{itemId} {
+        allow read: if true;
+        allow create, update: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+          (isOwner() ||
+           (userRole() == 'manager' && userBranch() == branchId)) &&
+          isValidMenuOverride(request.resource.data);
+        allow delete: if false;
+      }
+
+      match /config/{configDoc} {
+        allow read: if true; // Public: operating hours needed on checkout
+        // t78 (PERF-10 T-7): App-Check posture (b10 P-6 sweep completion).
+        allow write: if isAppVerified() && isOwner();
+      }
+
+      // PERF-9 T-2 (B-2): the branch waitlist ORDINAL doc
+      // `{nextTicket, nowServing}` (isValidWaitlistMeta above). Every
+      // app-verified guest must be able to READ it: the customer position
+      // (`myTicket - nowServing - 1`) is computed LOCALLY from this doc plus
+      // the guest's OWN waitlist doc -- the old branch-scoped LIST query is
+      // DENIED for customers as soon as 2+ users are queued (W1-T7).
+      // Writes happen inside the join/leave transactions on the guest's own
+      // client (waitlist_repository.dart:118-121/197-200) and on the staff
+      // serve path (serveNext, :152-155), so both lanes are allowed with a
+      // shape lock; delete stays impossible (rotation = update).
+      match /waitlist_meta/{docId} {
+        allow read: if isAppVerified() && isAuthenticated() && !isAnonymous();
+        allow create, update: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+          isValidWaitlistMeta(request.resource.data);
+        allow delete: if false;
+      }
+    }
+
+    // ── locations ────────────────────────────────────────────────────────
+    // B0 P0-2: read by feature code (location_repository.dart:26-31). Writes are
+    // owner/manager-only; a hostile doc can never break the Locations parser
+    // (LatLngParse accepts lat/lng, coordinates, or geo.geopoint — hasValidGeometry).
+    match /locations/{id} {
+      allow read: if isAppVerified() && isAuthenticated() && !isAnonymous();
+      allow create: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        (isOwner() ||
+         (userRole() == 'manager' &&
+          request.resource.data.branchId == userBranch())) &&
+        isValidLocationShape(request.resource.data);
+      allow update: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        (isOwner() ||
+         (userRole() == 'manager' &&
+          resource.data.branchId == userBranch())) &&
+        isValidLocationShape(request.resource.data);
+      allow delete: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        (isOwner() ||
+         (userRole() == 'manager' && resource.data.branchId == userBranch()));
+    }
+
+    match /promotions/{promoId} {
+      allow read: if true; // Public: promo banners visible to guests
+      // t78 (PERF-10 T-7): App-Check posture (b10 P-6 sweep completion).
+      allow write: if isAppVerified() && isOwner();
+    }
+
+    // ── settings/restaurantConfig + settings/defaultOperatingHours ────────
+    // B0 P0-3: these config docs are READ by every signed-in user (home/cart/
+    // checkout watch restaurantConfigProvider, restaurant_config_service.dart:7-20)
+    // and WRITTEN by owner-only flows (restaurant_config_service.dart:16-28,
+    // operating_hours_screen.dart:33, panic_switch_service.dart:37-42).
+    // Most-specific matches MUST appear before the generic settings/{doc} block.
+    match /settings/restaurantConfig {
+      allow read: if isAppVerified() && isAuthenticated() && !isAnonymous();
+      allow create, update: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        isOwner() &&
+        isValidRestaurantConfigShape(request.resource.data);
+      allow delete: if false;
+    }
+
+    // PERF-6b: per-client tax table — owner-managed, consumed by the server
+    // money path (calculateTax / resolveChargeTaxAndPromo). Read follows the
+    // restaurantConfig lane; delete stays impossible (settings are operator
+    // state; rotation = update).
+    match /settings/taxRates {
+      allow read: if isAppVerified() && isAuthenticated() && !isAnonymous();
+      allow create, update: if isAppVerified() && isAuthenticated() &&
+        !isAnonymous() && isOwner() &&
+        isValidTaxRatesShape(request.resource.data);
+      allow delete: if false;
+    }
+
+    match /settings/defaultOperatingHours {
+      allow read: if isAppVerified() && isAuthenticated() && !isAnonymous();
+      allow create, update: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        isOwner() &&
+        isValidOperatingHoursShape(request.resource.data);
+      allow delete: if false;
+    }
+
+    match /settings/{doc} {
+      // W-5 FIX: only featureFlags is public; owners read non-public settings
+      // W-9 NOTE: settings/ownerInfo is NOT client-writable — ownership changes
+      // must run through a Cloud Function that audits (Law 36).
+      // t78 (PERF-10 T-7): App-Check posture — featureFlags is the doc that
+      // arms STRICT App Check; writing it must itself carry App Check.
+      allow read: if doc == 'featureFlags' || isOwner();
+      allow write: if isAppVerified() && isOwner() && doc == 'featureFlags';
+    }
+
+    // ── AUTHENTICATED-ONLY ────────────────────────────────────────────
+
+    match /admins/{doc} {
+      allow read: if isOwner();
+      // t78 (PERF-10 T-7): App-Check posture (b10 P-6 sweep completion).
+      allow write: if isAppVerified() && isOwner();
+    }
+
+    // b10 P-4: loyalty shape-lock. The only real writer is the Admin-SDK CF
+    // (functions/src/index.ts:1449-1458 → {userId, totalPoints, updatedAt});
+    // Admin SDK bypasses rules, so this guards hypothetical client writes.
+    // `tier` is optional but must be a string when present (W4.6 type guards).
+    match /loyalty/{userId} {
+      allow read: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        request.auth.uid == userId;
+      allow create, update: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        request.auth.uid == userId &&
+        request.resource.data.keys().hasOnly(['userId', 'totalPoints', 'updatedAt', 'tier']) &&
+        request.resource.data.totalPoints is int &&
+        request.resource.data.totalPoints >= 0 &&
+        (!('tier' in request.resource.data) || request.resource.data.tier is string);
+      allow delete: if false;
+    }
+
+    // ── users ─────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        (request.auth.uid == userId || userRole() in ['owner', 'manager']);
+
+      allow write: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        // Self-write OR owner OR manager within branch constraints
+        (request.auth.uid == userId ||
+         userRole() == 'owner' ||
+         (userRole() == 'manager' &&
+          resource.data.branchId == userBranch() &&
+          (!request.resource.data.keys().hasAny(['role']) ||
+           request.resource.data.role in ['kitchen', 'delivery', 'customer']))) &&
+
+        // ANTI-SELF-DEMOTION: Authenticated user CANNOT change their own role field under ANY circumstances
+        // (Even the owner cannot demote their own role to prevent self-lockout)
+        // C-1 FIX: NO e2e backdoor. Creation is customer-role-only (V5-compliant).
+        (resource == null ?
+           // On Creation: Allow if assigning 'customer' only
+           (!request.resource.data.keys().hasAny(['role']) ||
+            request.resource.data.role == 'customer')
+           :
+           // On Update: CANNOT change role unless targeting someone else's document
+           (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) ||
+            request.auth.uid != userId)
+        ) &&
+
+        // THE OWNER CANNOT BE DEMOTED by anyone except via a full owner swap
+        (resource == null || !('email' in resource.data) ||
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) ||
+         request.resource.data.role == resource.data.role ||
+         !(exists(/databases/$(database)/documents/settings/ownerInfo) &&
+           get(/databases/$(database)/documents/settings/ownerInfo).data.ownerEmail == resource.data.email) ||
+         isOwner()) &&
+
+        // Only owners can write branchId (Law 12)
+        // C-1 FIX: NO e2e backdoor. Creation branchId must be empty/absent.
+        (resource == null ?
+           (!request.resource.data.keys().hasAny(['branchId']) ||
+            request.resource.data.branchId == '')
+           :
+           (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['branchId']) ||
+            isOwner())
+        );
+    }
+
+// ── deletion_requests ─────────────────────────────────────────────────
+    // GDPR erasure markers (gdpr_service.dart + deleteUserData CF). Users may
+    // only read/update their OWN marker; delete is forbidden because the marker
+    // is the audit proof of erasure + the server-side retrier's worklist.
+    match /deletion_requests/{userId} {
+      allow read, create, update: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        request.auth.uid == userId;
+      allow delete: if false;
+    }
+    // ── orders ────────────────────────────────────────────────────────
+    match /orders/{orderId} {
+      allow read: if isAppVerified() && isAuthenticated() && !isAnonymous() && (
+        userRole() == 'owner' ||
+        (userRole() == 'manager' && resource.data.branchId == userBranch()) ||
+        (userRole() == 'kitchen' &&
+          resource.data.branchId == userBranch() &&
+          resource.data.status in ['confirmed', 'preparing', 'ready']) ||
+        (userRole() == 'delivery' &&
+          resource.data.branchId == userBranch() &&
+          (resource.data.status in ['ready', 'pickedUp'] ||
+           resource.data.assignedDriverId == request.auth.uid)) ||
+        (userRole() == 'customer' &&
+          resource.data.customerId == request.auth.uid)
+      );
+      // p26 T-4 (D-P26-4(a)): the KEY SHAPE LOCK. On create there is no
+      // `resource`, so the affected-key equivalent of the update-time
+      // `diff(resource.data).affectedKeys().hasOnly([...])` idiom below is the
+      // FULL candidate key set. The allowlist is exactly what the ONLY
+      // client-side create path can write: the offline-replay payload
+      // (order_offline_payload.dart → OrderModel.toJson() + offlineQueued +
+      // queuedAt) plus the replayer's `updatedAt` stamp (sync_queue.dart:315).
+      // `orderSource` is deliberately ABSENT: it is server-owned (the p19
+      // platform ingest writes it via the admin SDK, which bypasses rules), so
+      // a client-forged platform tag is now a DENY. Every production order
+      // create otherwise goes through the `createOrder` callable (server
+      // write). Contract: test/rules/order_create_payload_contract_test.dart
+      // (rule text read off disk) + harness q-T3..q-T11.
+      allow create: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        isOrdersAccepting() &&
+        request.resource.data.keys().hasOnly([
+          'id', 'customerId', 'status', 'totalCents', 'taxCents',
+          'discountCents', 'tipCents', 'deliveryFeeCents', 'orderNumber',
+          'createdAt', 'updatedAt', 'items', 'branchId', 'assignedDriverId',
+          'customerLat', 'customerLng', 'offlineQueued', 'queuedAt'
+        ]) &&
+        request.resource.data.customerId == request.auth.uid &&
+        request.resource.data.branchId is string &&
+        request.resource.data.branchId.size() > 0 &&
+        request.resource.data.totalCents is int &&
+        request.resource.data.totalCents >= 0 &&
+        request.resource.data.status == 'pending';
+      // b10 P-1: every staff update is a fixed-shape ops write. `updatedAt` is
+      // NON-authoritative bookkeeping (client clock) — the actual transition
+      // legality stays gated by the role/branch/pre-state clauses. The
+      // delivery clause models the REAL payloads: (a) CLAIM of an unassigned
+      // ready order via assignToMe (delivery_service.dart:107-111 →
+      // {assignedDriverId: self, status: 'pickedUp', updatedAt}; the baseline
+      // `resource.data.assignedDriverId == auth.uid` pre-state DENIED this
+      // real flow), and (b) own-order lifecycle with the POD sub-map
+      // (proof_of_delivery_service.dart:57-64 → proofOfDelivery.url/uploadedBy)
+      // guarded to the assigned driver's own upload.
+      allow update: if isAppVerified() && isAuthenticated() && !isAnonymous() && (
+        userRole() == 'owner' ||
+        (userRole() == 'manager' &&
+          resource.data.branchId == userBranch() &&
+          request.resource.data.diff(resource.data)
+            .affectedKeys().hasOnly(['status', 'assignedDriverId', 'updatedAt'])) ||
+        (userRole() == 'kitchen' &&
+          resource.data.branchId == userBranch() &&
+          resource.data.status in ['confirmed', 'preparing'] &&
+          request.resource.data.status in ['preparing', 'ready'] &&
+          request.resource.data.diff(resource.data)
+            .affectedKeys().hasOnly(['status', 'updatedAt'])) ||
+        // PERF-9 T-4 (B-4): the CUSTOMER cancel path. Demo mode writes
+        // {status:'cancelled', updatedAt} STRAIGHT to the doc from the client
+        // (order_repository.dart:58-70); pre-fix NO customer clause existed, so
+        // the customer's own cancel was denied and nothing pinned that a
+        // stranger could not cancel someone else's order. Narrow by
+        // construction: the caller owns the order, the only legal customer
+        // transition is 'cancelled', and no key other than status/updatedAt
+        // may change (money stays server-owned). Production cancels run
+        // through the `cancelOrder` callable and never need this clause.
+        (userRole() == 'customer' &&
+          resource.data.customerId == request.auth.uid &&
+          request.resource.data.diff(resource.data)
+            .affectedKeys().hasOnly(['status', 'updatedAt']) &&
+          request.resource.data.status == 'cancelled') ||
+        (userRole() == 'delivery' &&
+          resource.data.branchId == userBranch() &&
+          resource.data.status in ['ready', 'pickedUp'] &&
+          request.resource.data.status in ['pickedUp', 'delivered'] &&
+          request.resource.data.diff(resource.data)
+            .affectedKeys().hasOnly(['status', 'assignedDriverId', 'updatedAt', 'proofOfDelivery']) &&
+          (!request.resource.data.diff(resource.data)
+             .affectedKeys().hasAny(['proofOfDelivery']) ||
+           (request.resource.data.proofOfDelivery.url is string &&
+            request.resource.data.proofOfDelivery.uploadedBy == request.auth.uid)) &&
+          // NOTE: the two branches below are parenthesised INSIDE the shape
+          // guards above — an earlier revision left the own-order branch
+          // top-level, which let `items`/rogue keys bypass hasOnly (harness
+          // T11 + b10-T6/T7 regressions). Either a CLAIM of an unassigned
+          // order for self ('assignedDriverId' may be absent OR null on
+          // unassigned orders — both handled), or an own-order transition
+          // that never reassigns to someone else.
+          (((!('assignedDriverId' in resource.data) ||
+             resource.data.assignedDriverId == null) &&
+            request.resource.data.assignedDriverId == request.auth.uid &&
+            request.resource.data.status == 'pickedUp') ||
+           (resource.data.assignedDriverId == request.auth.uid &&
+            (!request.resource.data.diff(resource.data)
+               .affectedKeys().hasAny(['assignedDriverId']) ||
+             request.resource.data.assignedDriverId == request.auth.uid))))
+      );
+    }
+
+    // ── presence ─────────────────────────────────────────────────────
+    // b10 P-4/P-6: self-only writes, shape-locked to the REAL payload
+    // (presence_service.dart:37-49 → {isOnline, lastSeen, branchId, role},
+    // merge-set; `lastSeen` is FieldValue.serverTimestamp() so it resolves to
+    // a Timestamp, not the "number" sketched in the acceptance draft — W4.6
+    // design principle: match REAL payloads). Role is locked to the staff
+    // roles the provider can emit (presenceServiceProvider never runs for
+    // customers). App Check on writes.
+    match /presence/{userId} {
+      allow read: if isAuthenticated() && !isAnonymous() &&
+        (userRole() == 'owner' ||
+         (userRole() in ['manager', 'kitchen', 'delivery'] &&
+          resource.data.branchId == userBranch()));
+      allow write: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        request.auth.uid == userId &&
+        request.resource.data.keys().hasOnly(['isOnline', 'lastSeen', 'branchId', 'role']) &&
+        request.resource.data.isOnline is bool &&
+        request.resource.data.branchId is string &&
+        request.resource.data.role is string &&
+        // Role must equal the WRITER'S OWN role (payload role comes from
+        // user.role.name) — prevents presence self-escalation to 'owner'.
+        request.resource.data.role == userRole();
+      allow delete: if false;
+    }
+
+    // ── reservation_locks ─────────────────────────────────────────────
+    match /reservation_locks/{lockId} {
+      // W-4 FIX: users see only their own locks; staff see branch-scoped
+      // b10 P-6: App Check on every surface.
+      allow read: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        (userRole() in ['owner', 'manager'] ||
+         resource.data.userId == request.auth.uid);
+      allow create: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        request.resource.data.userId == request.auth.uid;
+      allow delete: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        resource.data.userId == request.auth.uid;
+    }
+
+    // ── reservation_counters ────────────────────────────────────────────
+    // B0 P0-1: booking counters are written AND read inside requestSlot's own
+    // transaction (reservations_repository.dart:18-22/32/51-55). Read MUST be
+    // allowed for app-verified users or the booking transaction itself (and the
+    // customer-facing getAvailableCapacity) would be denied. Deterministic
+    // {branch}_{start} keys; a hostile write only corrupts a booking slot.
+    match /reservation_counters/{key} {
+      allow read: if isAppVerified() && isAuthenticated() && !isAnonymous();
+      allow create, update: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        isValidReservationCounter(request.resource.data);
+      allow delete: if false;
+    }
+
+    // ── reservations ──────────────────────────────────────────────────
+    // W-2 FIX: customers create reservations with locked shape.
+    // NOTE: App's real payload (reservations_repository.dart) uses
+    // userId/branchId/customerName/customerPhone/startTime/partySize/notes.
+    match /reservations/{resId} {
+      // b10 P-6: App Check on every surface.
+      allow read: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        (userRole() in ['owner', 'manager'] ||
+         resource.data.userId == request.auth.uid);
+      allow create: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.branchId is string &&
+        request.resource.data.branchId.size() > 0 &&
+        request.resource.data.keys().hasOnly(
+          ['userId', 'branchId', 'customerName', 'customerPhone', 'startTime', 'partySize', 'notes']);
+      allow update: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        (userRole() in ['owner', 'manager'] ||
+         (resource.data.userId == request.auth.uid &&
+          !request.resource.data.diff(resource.data)
+             .affectedKeys().hasAny(['userId', 'branchId'])));
+      allow delete: if isAppVerified() && isAuthenticated() && !isAnonymous() && userRole() in ['owner', 'manager'];
+    }
+
+    // ── carts ─────────────────────────────────────────────────────────
+    // PERF-9 T-5 (B-5): App Check uniformity with the b10 P-6 sweep. `carts`
+    // is a customer-facing PERSONAL-DATA surface (the GDPR export reads
+    // carts/{uid} -- data_export_service.dart:119) and was the only such
+    // surface still missing the App Check clause.
+    match /carts/{userId} {
+      allow read, write: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        request.auth.uid == userId;
+    }
+
+    // ── promoCodes ───────────────────────────────────────────────────
+    // W-3 FIX: promo codes are global-value — owner only
+    // W-5 FIX: no anonymous reads
+    // b10 P-7: reads narrowed to owner/manager — customers validate codes via
+    // the callable CF (promo_code_service.dart:18-19: "The client NEVER reads
+    // promoCodes directly").
+    match /promoCodes/{code} {
+      allow read: if isAuthenticated() && !isAnonymous() &&
+        userRole() in ['owner', 'manager'];
+      // t78 (PERF-10 T-7): App-Check posture (b10 P-6 sweep completion).
+      allow write: if isAppVerified() && isAuthenticated() && !isAnonymous() && isOwner();
+    }
+
+    // ── driverLocations ──────────────────────────────────────────────
+    // t78 (PERF-10 T-7): posture aligned with the GPS sibling `deliveries` —
+    // App-Check gated create/update, self-only. The old `allow write` also
+    // permitted DELETE of the driver's own location doc; erasure is
+    // Admin-SDK-only (collectUserDocs), so client delete is now denied.
+    match /driverLocations/{driverId} {
+      allow read: if isAuthenticated() && !isAnonymous() &&
+        (userRole() in ['owner', 'manager', 'kitchen'] ||
+         request.auth.uid == driverId);
+      allow create, update: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        request.auth.uid == driverId;
+      allow delete: if false;
+    }
+
+    // ── deliveries ───────────────────────────────────────────────────
+    // W-1 FIX: LIVE GPS — written by the assigned driver only (V3-shaped).
+    // The app writes to deliveries/{orderId} (driver_location_service.dart).
+    match /deliveries/{orderId} {
+      allow read: if isAuthenticated() && !isAnonymous() &&
+        (userRole() in ['owner', 'manager', 'kitchen'] ||
+         (userRole() == 'delivery' &&
+          get(/databases/$(database)/documents/orders/$(orderId)).data.assignedDriverId == request.auth.uid) ||
+         (userRole() == 'customer' &&
+          get(/databases/$(database)/documents/orders/$(orderId)).data.customerId == request.auth.uid));
+
+      // t78 (PERF-10 T-7): App-Check posture — GPS traces are driver
+      // personal data; the sibling surfaces carry isAppVerified since b10 P-6.
+      allow create, update: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        userRole() == 'delivery' &&
+        get(/databases/$(database)/documents/orders/$(orderId)).data.assignedDriverId == request.auth.uid &&
+        get(/databases/$(database)/documents/orders/$(orderId)).data.status in ['confirmed', 'preparing', 'ready', 'pickedUp'] &&
+        request.resource.data.keys().hasOnly(['lat', 'lng', 'heading', 'speed', 'timestamp', 'driverId']) &&
+        request.resource.data.lat is number &&
+        request.resource.data.lng is number;
+
+      allow delete: if false;
+    }
+
+    // ── analyticsEvents ──────────────────────────────────────────────
+    // W-5 FIX: no anonymous writes
+    // b10 P-5: App Check + abuse caps on the demo-mode direct write
+    // (telemetry_service.dart:28-32 → {event, properties, timestamp}).
+    // `properties` cardinality is capped at 10 keys. NOTE: a per-VALUE
+    // length cap is NOT expressible — the security-rules language has no
+    // higher-order functions (`.filter(v => …)` fails to compile:
+    // "L554:49 Unexpected ')'. L558:23 Unexpected '='"), so per-value abuse
+    // is bounded by the key-count cap plus Firestore's 1 MiB document limit.
+    // In production the Analytics SDK path does not hit this rule at all
+    // (bundled SDK), so this only guards the demo-mode direct write.
+    match /analyticsEvents/{eventId} {
+      allow read: if isAuthenticated() && !isAnonymous() && userRole() in ['owner', 'manager'];
+      allow create: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        (!('properties' in request.resource.data) ||
+         (request.resource.data.properties is map &&
+          request.resource.data.properties.keys().size() <= 10));
+    }
+
+    // ── proof_of_delivery ─────────────────────────────────────────────
+    // P5-16: Only the ASSIGNED driver can write proof for their order.
+    // t78 (PERF-10 T-7): App-Check posture on both write paths.
+    match /proof_of_delivery/{poid} {
+      allow read: if isAuthenticated() && !isAnonymous() &&
+        (userRole() in ['owner', 'manager'] ||
+         resource.data.orderId != null &&
+         get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.assignedDriverId == request.auth.uid);
+      allow create: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        request.resource.data.driverId == request.auth.uid &&
+        request.resource.data.orderId != null &&
+        get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.assignedDriverId == request.auth.uid;
+      allow update: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        resource.data.driverId == request.auth.uid &&
+        resource.data.orderId != null &&
+        get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.assignedDriverId == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // ── promo_usage ───────────────────────────────────────────────────
+    // P5-16 (+P0-06): user can only write their OWN usage doc, created once.
+    match /promo_usage/{usageId} {
+      // b10 P-6: App Check on every surface.
+      allow read: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        (resource.data.userId == request.auth.uid || userRole() in ['owner', 'manager']);
+      allow create: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        resource.data.userId == request.auth.uid &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['userId', 'code']);
+      allow delete: if false;
+    }
+
+    // ── waitlist_counters ───────────────────────────────────────────────
+    // B0 P0-1: per-branch waitlist counters are written AND read inside
+    // joinWaitlist's own transaction (waitlist_repository.dart:49-52/63/80-87).
+    // Read MUST be allowed for app-verified users or joining is denied.
+    match /waitlist_counters/{branchId} {
+      allow read: if isAppVerified() && isAuthenticated() && !isAnonymous();
+      allow create, update: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        isValidWaitlistCounter(request.resource.data);
+      allow delete: if false;
+    }
+
+    // ── waitlist ──────────────────────────────────────────────────────
+    // P5-16 (+P5-10): user can only write their own entry keyed by their uid.
+    match /waitlist/{entryId} {
+      // b10 P-6: App Check on every surface.
+      allow read: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        (userRole() in ['owner', 'manager'] ||
+         resource.data.userId == request.auth.uid);
+      allow create: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        resource.data.userId == request.auth.uid &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['userId', 'branchId']);
+      allow delete: if isAppVerified() && isAuthenticated() && !isAnonymous() &&
+        (resource.data.userId == request.auth.uid || userRole() in ['owner', 'manager']);
+    }
+
+    // ── audit_log ─────────────────────────────────────────────────────
+    match /audit_log/{logId} {
+      allow read: if isOwner();
+      allow write: if false; // Written only by Cloud Functions Admin SDK
+    }
+
+    // ── notifications ──────────────────────────────────────────────────
+    // B3 P4 (finding 6.3): per-user notification mailbox — read/write SELF-only
+    // (mirror subcollection too). The demo queue daemon writes the recipient's
+    // items in demo mode; this keeps a mailbox private to its owner.
+    match /notifications/{userId} {
+      allow read, write: if isAppVerified() && isAuthenticated() && !isAnonymous() && request.auth.uid == userId;
+    }
+    match /notifications/{userId}/items/{itemId} {
+      allow read, write: if isAppVerified() && isAuthenticated() && !isAnonymous() && request.auth.uid == userId;
+    }
+
+    // ── notification_queue ─────────────────────────────────────────────
+    // B3 P4 (finding 6.3): internal notification delivery queue. Read for
+    // owner/manager; client WRITES are OWNER-gated so the demo daemon (running
+    // as the owner) can enqueue/drain in demo mode — production writes go
+    // through the Cloud Functions Admin SDK (bypass rules). Non-owners cannot
+    // touch the queue (fail-closed).
+    match /notification_queue/{id} {
+      allow read: if isAuthenticated() && !isAnonymous() && userRole() in ['owner', 'manager'];
+      // t78 (PERF-10 T-7): App-Check posture (b10 P-6 sweep completion).
+      // Client WRITES are owner-gated so the demo daemon (running as the
+      // owner) can enqueue/drain in demo mode; production writes go through
+      // the Cloud Functions Admin SDK (bypass rules).
+      allow write: if isAppVerified() && isOwner();
+    }
+
+    // ── audit_logs ─────────────────────────────────────────────────────
+    // B3 P4 (finding 6.3): audit trail — owner READ only; WRITES are denied
+    // (server/Admin SDK writes via the Admin SDK; the demo mock is demo-only
+    // and already denied by default).
+    match /audit_logs/{id} {
+      allow read: if isOwner();
+      allow write: if false;
+    }
+  }
+}

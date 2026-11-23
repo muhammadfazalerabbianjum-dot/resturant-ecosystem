@@ -1,0 +1,223 @@
+{
+  "_meta": {
+    "schemaVersion": "1.0.0",
+    "purpose": "Complete validated JSON template capturing every configurable aspect of a client app, derived from the Changeability Audit (<audit-folder>\\CHANGEABILITY_AUDIT_REPORT.md) and direct code inspection.",
+    "generated": "2026-08-14",
+    "constitution": "Carnama Constitutional Edition v1.0"
+  },
+  "app": {
+    "name": "Halal Boyz",
+    "bundleId": "labs.carnama.halalboys",
+    "primaryColor": "#2E7D32",
+    "fontFamily": "Roboto",
+    "storeAndroidUrl": "",
+    "storeIosUrl": "",
+    "fcmChannelDescription": "Notifications for your orders"
+  },
+  "environment": {
+    "cloudinaryCloudName": "demo-cloudinary",
+    "cloudinaryUploadPreset": "carnama_unsigned",
+    "stripePublishableKey": "pk_test_REPLACE_ME_USE_DART_DEFINE",
+    "recaptchaWebKey": "",
+    "firebaseAndroidApiKey": "",
+    "firebaseIosApiKey": "",
+    "devAdminPin": ""
+  },
+  "firebase": {
+    "projectId": "demo-tenant",
+    "androidAppId": "1:000000000000:android:c5922227445dbf14046047",
+    "iosAppId": "1:000000000000:ios:095a3a9a945aa096046047",
+    "messagingSenderId": "000000000000",
+    "iosClientId": "000000000000-9dhfnulnn6414bvfh40pq8hpiikfsijn.apps.googleusercontent.com",
+    "collections": {
+      "settings": "settings",
+      "waitlist": "waitlist",
+      "loyalty": "loyalty",
+      "menus": "menus",
+      "promotions": "promotions",
+      "branches": "branches",
+      "orders": "orders",
+      "driverLocations": "driverLocations",
+      "users": "users",
+      "carts": "carts",
+      "reservations": "reservations",
+      "presence": "presence",
+      "locations": "locations",
+      "promoCodes": "promoCodes",
+      "promo_usage": "promo_usage",
+      "deliveries": "deliveries",
+      "reservation_counters": "reservation_counters",
+      "reservation_locks": "reservation_locks",
+      "menu": "menu",
+      "admins": "admins",
+      "config": "config",
+      "notification_queue": "notification_queue",
+      "notifications": "notifications",
+      "audit_logs": "audit_logs",
+      "deletion_requests": "deletion_requests",
+      "analyticsEvents": "analyticsEvents"
+    },
+    "clientScopingFields": {
+      "branchId": ["orders", "menus", "branches"],
+      "customerId": ["orders", "reservations", "waitlist"],
+      "userId": ["waitlist", "loyalty", "carts", "presence"],
+      "assignedDriverId": ["orders"]
+    },
+    "configDocuments": {
+      "restaurantConfig": "settings/restaurantConfig",
+      "featureFlags": "settings/featureFlags",
+      "ownerInfo": "settings/ownerInfo",
+      "defaultOperatingHours": "settings/defaultOperatingHours",
+      "branchOperatingHours": "branches/{branchId}/config/operatingHours"
+    }
+  },
+  "features": {
+    "source": "settings/featureFlags",
+    "flags": {
+      "smartReorder": { "enabled": true },
+      "loyaltyPoints": { "enabled": true },
+      "tourMode": { "enabled": true },
+      "waitlist": { "enabled": true },
+      "referrals": { "enabled": true },
+      "deliveryTracking": { "enabled": true },
+      "promoCode": { "enabled": true }
+    },
+    "unknownFlagDefault": false
+  },
+  "tax": {
+    "defaultRate": 0.0,
+    "stateRates": {
+      "CA": 0.0725,
+      "NY": 0.08,
+      "TX": 0.0625,
+      "FL": 0.06
+    },
+    "source": "firestore",
+    "currentImplementation": "server-side Cloud Function calculateTax (hardcoded; redeploy required)",
+    "failClosedOnUnknownState": true
+  },
+  "branches": {
+    "defaultBranchId": ""
+  },
+  "loyalty": {
+    "pointsPerDollar": 10,
+    "redemptionThresholdPoints": 500,
+    "goldThresholdPoints": 2000
+  },
+  "theme": {
+    "injection": "local-config-file",
+    "typography": {
+      "fontFamily": "System",
+      "headlineSize": 24.0,
+      "titleSize": 20.0,
+      "bodySize": 14.0,
+      "captionSize": 12.0
+    },
+    "colors": {
+      "primary": "0xFFFF6B00",
+      "secondary": "0xFF1D3557",
+      "accent": "0xFFF4A261",
+      "background": "0xFFFFFFFF",
+      "surface": "0xFFFFFFFF",
+      "textPrimary": "0xFF1E1E1E",
+      "textSecondary": "0xFF9E9E9E",
+      "error": "0xFFE53935",
+      "success": "0xFF4CAF50",
+      "warning": "0xFFFFC107",
+      "transparent": "0x00000000",
+      "background54": "0x8AFFFFFF",
+      "background70": "0xB3FFFFFF",
+      "textPrimary12": "0x1F1E1E1E",
+      "textPrimary45": "0x731E1E1E",
+      "textPrimary54": "0x8A1E1E1E"
+    },
+    "darkTheme": {
+      "background": "0xFF121212",
+      "surface": "0xFF1E1E1E"
+    },
+    "confettiOverlay": {
+      "colors": ["0xFFE63946", "0xFF1D3557", "0xFFF4A261", "0xFF2A9D8F"]
+    },
+    "spacing": {
+      "smallPadding": 8.0,
+      "mediumPadding": 16.0,
+      "largePadding": 24.0
+    }
+  },
+  "navigation": {
+    "entryPoint": "/",
+    "tabs": ["/", "/menu", "/orders", "/reservations", "/profile"],
+    "hiddenRoutes": [
+      "/admin",
+      "/admin/menu",
+      "/role-router",
+      "/owner",
+      "/manager",
+      "/kitchen",
+      "/delivery",
+      "/error-logs",
+      "/logs",
+      "/admin-gateway"
+    ],
+    "routes": {
+      "splash": "/splash",
+      "onboarding": "/onboarding",
+      "login": "/login",
+      "signup": "/signup",
+      "home": "/",
+      "menu": "/menu",
+      "dishDetail": "/dish/:id",
+      "cart": "/cart",
+      "checkout": "/checkout",
+      "orderTracker": "/orders/:orderId",
+      "orders": "/orders",
+      "reservations": "/reservations",
+      "locations": "/locations",
+      "waitlist": "/waitlist",
+      "loyalty": "/loyalty",
+      "profile": "/profile",
+      "errorLogs": "/error-logs",
+      "admin": "/admin",
+      "adminMenu": "/admin/menu",
+      "roleRouter": "/role-router",
+      "ownerDashboard": "/owner",
+      "managerDashboard": "/manager",
+      "kitchenDashboard": "/kitchen",
+      "deliveryDashboard": "/delivery",
+      "privacy": "/privacy",
+      "terms": "/terms",
+      "deleteAccount": "/delete-account",
+      "logs": "/logs",
+      "adminGateway": "/admin-gateway"
+    }
+  },
+  "screens": [
+    { "id": "SplashScreen", "route": "/splash", "mandatory": true },
+    { "id": "OnboardingScreen", "route": "/onboarding", "mandatory": true },
+    { "id": "LoginScreen", "route": "/login", "mandatory": true },
+    { "id": "SignupScreen", "route": "/signup", "mandatory": true },
+    { "id": "HomeScreen", "route": "/", "mandatory": true },
+    { "id": "MenuScreen", "route": "/menu", "mandatory": true },
+    { "id": "DishDetailScreen", "route": "/dish/:id", "mandatory": true },
+    { "id": "CartScreen", "route": "/cart", "mandatory": true },
+    { "id": "CheckoutScreen", "route": "/checkout", "mandatory": true },
+    { "id": "OrderTrackerScreen", "route": "/orders/:orderId", "mandatory": true },
+    { "id": "OrderHistoryScreen", "route": "/orders", "mandatory": true },
+    { "id": "ReservationScreen", "route": "/reservations", "mandatory": false },
+    { "id": "LocationScreen", "route": "/locations", "mandatory": false },
+    { "id": "PinDropMapScreen", "route": "/location/map", "mandatory": false },
+    { "id": "WaitlistScreen", "route": "/waitlist", "mandatory": false },
+    { "id": "LoyaltyScreen", "route": "/loyalty", "mandatory": false },
+    { "id": "ProfileScreen", "route": "/profile", "mandatory": true },
+    { "id": "DeliveryTrackerScreen", "route": "/tracking/:orderId", "mandatory": false },
+    { "id": "DeleteAccountScreen", "route": "/delete-account", "mandatory": true },
+    { "id": "TermsOfServiceScreen", "route": "/terms", "mandatory": true },
+    { "id": "PrivacyPolicyScreen", "route": "/privacy", "mandatory": true },
+    { "id": "RoleRouterScreen", "route": "/role-router", "mandatory": false },
+    { "id": "AdminGatewayScreen", "route": "/admin-gateway", "mandatory": false },
+    { "id": "TierFlagManagerScreen", "route": "/admin/setup/tier-flags", "mandatory": false },
+    { "id": "RestaurantSetupScreen", "route": "/admin/setup/restaurant", "mandatory": false },
+    { "id": "OperatingHoursScreen", "route": "/admin/setup/hours", "mandatory": false }
+  ],
+  "newFeatures": []
+}

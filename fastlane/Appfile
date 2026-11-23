@@ -1,0 +1,4 @@
+# Carnama monorepo — Google Play service account (the JSON key itself is a
+# credential: reference it via $GOOGLE_JSON_KEY_FILE, NEVER commit the file).
+json_key_file(ENV["GOOGLE_JSON_KEY_FILE"])
+package_name("com.carnama.labs")

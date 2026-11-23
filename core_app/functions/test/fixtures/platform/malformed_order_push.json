@@ -1,0 +1,7 @@
+{
+  "event": "order.push",
+  "order_id": "DH-MALFORMED-1",
+  "store_id": "carnama-branch-1",
+  "currency": "AED",
+  "products": "not-an-array"
+}

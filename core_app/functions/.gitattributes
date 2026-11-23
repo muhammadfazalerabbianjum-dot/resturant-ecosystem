@@ -1,0 +1,5 @@
+# CI-3 (W1.5): enforce LF in the working tree. The git index already stores LF
+# for every functions file; without this, a Windows checkout (core.autocrlf=true)
+# materializes CRLF and `npm run lint` fails with ~1,900 phantom linebreak-style
+# errors that CI (Linux, LF) never sees.
+* text=auto eol=lf

@@ -1,0 +1,111 @@
+rules_version = '2';
+
+// ============================================================
+// CARNAMA — Firebase Storage Security Rules (Law 12)
+// ============================================================
+// The mobile client is hostile. Zero permissive rules.
+// Every path is locked by role and ownership.
+// Rules are tested locally against the Storage Emulator.
+// ============================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ── Shared Helper Functions ──────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // MUST match the Firestore field name: settings/ownerInfo.ownerEmail
+    // (see firestore.rules `isOwner()` — the app writes ownerEmail, not email).
+    function isOwner() {
+      return isAuthenticated() &&
+        firestore.exists(/databases/(default)/documents/settings/ownerInfo) &&
+        firestore.get(/databases/(default)/documents/settings/ownerInfo).data.ownerEmail == request.auth.token.email;
+    }
+
+    function isManager() {
+      return isOwner() ||
+        (isAuthenticated() &&
+         firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'manager');
+    }
+
+    function isOwnFile(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // ── Max file size enforcement (5MB) ─────────────────────
+    function isValidSize() {
+      return request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // ── Allowed image MIME types ─────────────────────────────
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    // ── Menu Item Images ─────────────────────────────────────
+    // Only Owner/Manager can upload. All authenticated users can read.
+    match /menus/{itemId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isManager() && isValidSize() && isImage();
+      allow delete: if isManager();
+    }
+
+    // ── Promotion Banner Images ──────────────────────────────
+    match /promotions/{promoId}/{fileName} {
+      allow read: if true; // Publicly readable (used in hero banners)
+      allow write: if isOwner() && isValidSize() && isImage();
+      allow delete: if isOwner();
+    }
+
+    // ── Proof of Delivery Photos ─────────────────────────────
+    // Only the assigned driver can upload. Owner/Manager can read.
+    // t78 (PERF-10 T-7): the write path is narrowed from ANY delivery-role
+    // user to THE ASSIGNED driver of $(orderId) — mirroring the Firestore
+    // proof_of_delivery create rule (firestore.rules P5-16), which already
+    // requires orders/{orderId}.assignedDriverId == request.auth.uid. Pre-fix
+    // a delivery token could upload to ANY order's POD path (over-broad write
+    // on a personal-data surface); the client upload flow
+    // (proof_of_delivery_service.dart) uploads only AFTER the order is claimed,
+    // so the assignment gate matches the real payload.
+    match /proof_of_delivery/{orderId}/{fileName} {
+      allow read: if isManager();
+      // t78 (PERF-10 T-7) hardening: the assignment lookup must never raise a
+      // rules EVALUATION error (a missing order doc -> `firestore.get(...)` is
+      // null -> `.data` deref errors, and a doc without the field errors too).
+      // `firestore.exists()` short-circuits the lookup and `data.get(k, '')`
+      // tolerates an absent field, so an unassigned / unknown order is a CLEAN
+      // deny instead of an error (the emulator caught this as
+      // "storage.rules line [77] Null value error").
+      allow write: if isAuthenticated() &&
+        request.auth.token.role == 'delivery' &&
+        firestore.exists(/databases/(default)/documents/orders/$(orderId)) &&
+        firestore.get(/databases/(default)/documents/orders/$(orderId)).data.get('assignedDriverId', '') == request.auth.uid &&
+        isValidSize() &&
+        isImage();
+    }
+
+    // ── User Profile Avatars ─────────────────────────────────
+    // Users can only upload/delete their own avatar.
+    match /avatars/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isOwnFile(userId) && isValidSize() && isImage();
+      allow delete: if isOwnFile(userId);
+    }
+
+    // ── Branch Assets ─────────────────────────────────────────
+    // Branch logos, interior photos, etc. Owner only.
+    match /branches/{branchId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner() && isValidSize() && isImage();
+      allow delete: if isOwner();
+    }
+
+    // ── Everything else: DENY ─────────────────────────────────
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

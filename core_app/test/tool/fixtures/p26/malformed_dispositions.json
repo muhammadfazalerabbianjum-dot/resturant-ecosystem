@@ -1,0 +1,6 @@
+{
+  "d5:WHITE_LABEL_p99_fake.md:999": {
+    "status": "SPEC",
+    "note": "An intentionally invalid status so the harness test pins the parse-rejection exit 2 path."
+  }
+}

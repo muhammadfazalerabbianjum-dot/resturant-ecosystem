@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "note": "Gate definitions for tool/gate.mjs. Adding a gate = adding an entry here; gate.cmd needs no change. 'proves' is the plain-English sentence that lands in every receipt.",
+  "gates": [
+    {
+      "id": "a",
+      "label": "dart-analyze",
+      "kind": "command",
+      "cwd": "core_app",
+      "cmd": "flutter analyze --no-pub",
+      "timeoutMs": 600000,
+      "requires": [
+        "flutter"
+      ],
+      "active": true,
+      "proves": "Dart static analysis over the whole app package. This is the only health fact proven before P0 started (137s, exit 0), so it is also the baseline this gate is checked against.",
+      "plant": "introduce an unused import or a type error in a lib/ file"
+    },
+    {
+      "id": "b",
+      "label": "gate-fast-tests",
+      "kind": "command",
+      "cwd": "core_app",
+      "cmd": "flutter test --tags gate_fast",
+      "timeoutMs": 900000,
+      "requires": [
+        "flutter"
+      ],
+      "active": true,
+      "proves": "The fast smoke set: config-schema validation plus money formatting and payment payload contracts. These are the paths every expansion card touches first; if they break, later work is being built on sand.",
+      "plant": "break an assertion in a gate_fast-tagged money test"
+    },
+    {
+      "id": "c",
+      "label": "functions-build",
+      "kind": "command",
+      "cwd": "core_app/functions",
+      "cmd": "npm run build",
+      "timeoutMs": 600000,
+      "requires": [
+        "node",
+        "npm"
+      ],
+      "active": true,
+      "proves": "tsc compiles the Cloud Functions source. A type error here is a deploy that fails during service, so it must be caught before any deploy is attempted.",
+      "plant": "add a type error to a functions/src file"
+    },
+    {
+      "id": "d",
+      "label": "emulator-rules",
+      "kind": "command",
+      "cwd": "core_app",
+      "cmd": "node ../tool/emulator_probe.mjs",
+      "timeoutMs": 900000,
+      "requires": [
+        "firebase",
+        "java",
+        "node"
+      ],
+      "active": true,
+      "proves": "firestore.rules actually compiles, loads in the real Firestore emulator and is enforced: an unauthenticated read of /menus succeeds because the rule allows it, and of /users fails with 403 because no rule allows it. Port comes from the OS (tool/emulator_probe.mjs) because unrelated software on this machine occupies the conventional ports. This does not test rule semantics (tenant isolation, field allowlists) \u2014 that is P0-8.",
+      "plant": "append invalid syntax to core_app/firestore.rules, or flip the /menus read rule to false"
+    },
+    {
+      "id": "e",
+      "label": "whitelabel-dry-run",
+      "kind": "command",
+      "cwd": "core_app",
+      "cmd": "dart run tool/whitelabel.dart --config ../apps/halal_boyz/assets/client_config.json --dry-run",
+      "timeoutMs": 600000,
+      "requires": [
+        "dart"
+      ],
+      "active": true,
+      "proves": "The white-label factory still validates a real client config end to end without writing anything. This is the only gate that protects the fleet rather than the shared body.",
+      "plant": "remove a required key from apps/halal_boyz/assets/client_config.json"
+    },
+    {
+      "id": "f",
+      "label": "stub-scan",
+      "kind": "stub_scan",
+      "extensions": [
+        ".dart",
+        ".ts",
+        ".js",
+        ".mjs"
+      ],
+      "baseline": "checkpoints/P0-01.pre.txt",
+      "active": true,
+      "proves": "No placeholder markers (unfinished-work comments, unimplemented throws) in any code file changed during P0, excluding the owner's pre-existing dirty files. Makes law L2 mechanical instead of aspirational.",
+      "plant": "add a marker comment to a new .dart file"
+    },
+    {
+      "id": "i",
+      "label": "tenant-isolation-generator",
+      "kind": "command",
+      "cwd": "core_app",
+      "cmd": "dart run tool/gen_tenant_isolation_tests.dart --check",
+      "timeoutMs": 120000,
+      "requires": [
+        "dart"
+      ],
+      "active": true,
+      "proves": "That the machine which will prove tenant isolation is complete and in sync: every top-level collection in firestore.rules has a case row, every row still matches a real collection, and the generated suite equals what the registry would produce. It proves nothing about isolation itself \u2014 all cases are PENDING-TENANCY until tenancy exists, and the suite says so out loud.",
+      "plant": "add a `match /newCollection/{id}` block to firestore.rules without adding a registry row"
+    },
+    {
+      "id": "g",
+      "label": "functions-coverage",
+      "kind": "command",
+      "cwd": "core_app/functions",
+      "cmd": "npm run test:coverage",
+      "timeoutMs": 900000,
+      "requires": [
+        "node",
+        "npm"
+      ],
+      "active": true,
+      "activation": "Activated by P0-9 (2026-11-09): c8 installed, per-file floors in core_app/functions/coverage-floors.json (legacy files frozen at measured truth, new files 90%).",
+      "proves": "That server code added from P0 onward is actually exercised to the agreed floor. Coverage is the only measure that separates tested from merely compiled.",
+      "plant": "add an uncovered exported function to functions/src"
+    },
+    {
+      "id": "h",
+      "label": "backend-parity",
+      "kind": "command",
+      "cwd": "core_app",
+      "cmd": "dart run tool/check_backend_parity.dart",
+      "timeoutMs": 300000,
+      "requires": [
+        "dart"
+      ],
+      "active": true,
+      "proves": "Every apps/*/backend copy of firestore.rules, storage.rules and firestore.indexes.json is byte-identical to the core_app canonical file, so a rule fixed in one place can never leave a client deployed with different security than the template.",
+      "plant": "append one comment line to apps/halal_boyz/backend/firestore.rules"
+    },
+    {
+      "id": "j",
+      "label": "tenant-isolation-emulator",
+      "kind": "command",
+      "cwd": "core_app",
+      "cmd": "node ../tool/tenant_isolation_probe.mjs",
+      "timeoutMs": 900000,
+      "requires": [
+        "firebase",
+        "java",
+        "node",
+        "flutter"
+      ],
+      "active": true,
+      "activation": "Activated by P1-4 (D-036): the generated suite's ACTIVE rows run against a real emulator with seeded tenants.",
+      "proves": "That the generated cross-tenant suite can fail in BOTH directions: tenant A is denied read and write on tenant B's SEEDED document, and is still ALLOWED to read its own. A rules change that leaks fails the denial half; a change that denies everything (a typo that would take the live menu down) fails the allow half. Each ACTIVE row is one real emulator assertion.",
+      "plant": "drop tenantOk() from the menus read rule, or invert tenantOk() to false"
+    },
+    {
+      "id": "k",
+      "label": "rules-harness",
+      "kind": "command",
+      "cwd": "core_app",
+      "cmd": "node ../tool/rules_harness.mjs",
+      "timeoutMs": 900000,
+      "requires": [
+        "firebase",
+        "java",
+        "node"
+      ],
+      "active": true,
+      "proves": "the semantic rules harness (test/rules/firestore_rules_test.js) actually executes and its assertions hold, so a new rule assertion cannot be added and silently never run. Gate (d) only proves the rules compile and load; this gate is the one that owns the harness. Failures are ratcheted against core_app/test/rules/known_failures.txt: an unlisted failure fails the gate, and a harness that reports no assertions at all also fails it.",
+      "plant": "invert one assertion in test/rules/firestore_rules_test.js (for example assertFails where the rules allow) and the gate must go red"
+    },
+    {
+      "id": "l",
+      "label": "licence-claim-scan",
+      "kind": "claim_scan",
+      "active": true,
+      "proves": "That no doc or licence file claims this project is open source, source-available or MIT-licensed. The root LICENSE grants viewing only, so such a sentence would advertise a grant the owner never made; a denial in the same sentence (\"not open source\") and mentions of third-party dependency licences are allowed. Historical receipts and the frozen archive are out of scope.",
+      "plant": "add the sentence 'This project is open source under the MIT licence.' to README.md or any file in docs/"
+    }
+  ]
+}

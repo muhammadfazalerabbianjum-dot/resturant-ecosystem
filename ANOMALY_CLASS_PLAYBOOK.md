@@ -1,0 +1,32 @@
+# ANOMALY-CLASS PLAYBOOK — what to look for (derived from every real finding in this repo)
+
+**Premise:** every anomaly found in the UI fleet, the halal_boyz audit and the coherence audit belongs to one of 13 recurring CLASSES. Each class has a signature, the real evidence that produced it, and a mechanical DETECTOR. Detectors produce CANDIDATES; every candidate gets one of four dispositions: **FIXED · OPERATOR-ACCEPTED · SPEC'D · FALSE-POSITIVE (documented)**. Nothing dies unexplained.
+
+| # | Class | Signature | Real evidence (receipts) | Detector |
+|---|---|---|---|---|
+| 1 | **Namespace collision** | a new public name already exists in an imported SDK/package | `Badge` vs `material.Badge` — broke compilation of every dual-importing file (UI-1) | Compile gate + public-API name audit before adding exports |
+| 2 | **Never-executed code / coverage misattribution** | lines counted but never run (const-evaluated constructors, dead branches) | const-ctor signature lines at 0% in lcov though "tested" (UI-1) | Per-file lcov parse with 100% floors + runtime-construction tests |
+| 3 | **Divergent twins (duplicate semantics)** | 2+ implementations of one concept that agree on the happy path and differ at edges | `formatCurrencyCents` vs `moneyCents`: `$-1.50` vs `-$1.50`, different unknown-code fallback (p16 research) | Grep parallel formatters/helpers per concept; then a PARITY TABLE test; unify or pin the divergence as a decision |
+| 4 | **Receipted-assumption drift** | a spec/doc asserts a mechanism's location/behavior the code does not match | p17 assumed the consent gate in `AnalyticsService`; it lives in `telemetry_service.dart:59` | Every spec premise carries file:line; re-verify at SYNC (blocker gate B-4) |
+| 5 | **Orphaned deferral** | a deferral that names no existing spec/owner | p20 deferred staff screens to a "candidate p21" that was never written (coherence audit) | Grep all specs for deferral phrases; every deferral must name an EXISTING file |
+| 6 | **Mechanism-exists-but-unconfigured (silent degradation)** | engine supports a token/key; the client config never sets it; nothing warns | halal_boyz: confetti = generic default palette; `components.input`/`chip`, `background`, `smallRadius`, `animationStyle` unset (F-1..F-4/F-6) | Config-vs-engine KEY MATRIX per client + completeness warnings at stamping time (p25) |
+| 7 | **Adjacent-capability absence** | surrounding machinery exists and is hardened, but the user-facing capability was never built | l10n hardened (p18) yet NO in-app language switcher / default-locale config (F-5) | Feature-area capability inventory: "what does the code support vs what can the user reach?" |
+| 8 | **Uncovered surface** | a presentation surface belongs to no wave/batch | 39 surfaces inventoried, 13 owned — checkout (921 lines, money-critical) unassigned (coherence audit) | Surface × wave coverage matrix, maintained in-repo; zero unassigned rows allowed |
+| 9 | **Missing primitive → per-screen duplication** | screens hand-roll what a shared component should own | tip selector (106), tracker steps (81), charts (app-side only), splash (148), tables (kitchen 430/manager 134); `owner_dashboard` 17 hand-rolled UI hits | Hand-rolled density count (Card/ListTile/showDialog/showModalBottomSheet per file) + library-class inventory diff |
+| 10 | **Launch-state config hazard** | placeholder secrets, empty security config, demo paths | `pk_test_REPLACE_ME…` in the client config (F-7); `devAdminPin` empty → verified fail-closed (safe by design) | Placeholder-pattern gate (exists, W6.1) + per-key empty-value behavior test (empty MUST be fail-closed) |
+| 11 | **Generated-vs-source drift (mirror rule)** | generator/template and stamped outputs drift apart | two client configs + generator `validate()` mirror pinned by `whitelabel_schema_identity_test.dart`; no config-vs-config completeness parity test | Schema-identity tests (exist) + extend to completeness/config parity (p25) |
+| 12 | **Process / hygiene** | untracked litter, cross-window WIP blocking merges, blanket `git add -A` | 212-file `tool_perf2` litter; UI-3/UI-4 blocked by live p12 WIP; my own `add -A` sweep (recorded + reverted) | `git status` hygiene checks, territory discipline, EXPLICIT-path adds only |
+| 13 | **Doc-vs-truth drift ("asserted by" claims)** | docs cite guards/tests that may not exist or changed | `app_colors.dart:10` claims `accessibility_guidelines_test.dart` guards config sync — VERIFIED TRUE (test reads both configs at :203-232) | Sample "asserted by/pinned by/enforced by" claims → verify the named file/line exists and asserts it |
+
+## Live detector run (this session — the classes are not theoretical)
+
+- **Detector 3 (divergent twins)** → surfaced `admin_reservations_tab.dart` + `reservation_screen.dart` inline `DateFormat(` sites (4 hits). TRIAGE: **handled** — both pass the ACTIVE locale explicitly (`Localizations.localeOf(context).toString()` / `loc.localeName`, comment "B4-5: format in the ACTIVE app locale so non-English operators read dates in their own language"); the `'yyyy-MM-dd HH:mm'` slot label is deliberately locale-independent. Disposition: FALSE-POSITIVE (documented — the sites stay on record as reviewed).
+- **Detector 9 (hand-rolled density)** → `owner_dashboard` 17 · `restaurant_setup_screen` 8 · `delivery_dashboard` 5 · `home_screen` / `profile_screen` / `kitchen_dashboard` / `home_feed_showcase` 3 each. Confirms the coverage matrix: the most hand-rolled surfaces are exactly the unassigned ones (p21/p22 territory).
+- **Detector 5 (orphaned deferrals)** → the p20→"candidate p21" hole (all other hits are historical ledger text — verified stale, not live promises).
+- **Detector 13 (doc claims)** → sampled claims verified true (`app_colors.dart:10` → `accessibility_guidelines_test.dart:203-232` reads BOTH configs; `brand_colors.dart:18` → ban test exists); one pending follow-up (`order_repository.dart:97` payload-shape claim).
+
+## The standing rule this produces
+
+**Every new batch spec must state which of the 13 classes its verifier walk covers** (they do not all apply — a docs batch covers none; a client-config batch covers 3/6/10/11; an adoption batch covers 2/4/8/9). This converts "we found issues" into "we mechanically cannot miss this class again".
+
+**Recommended next tool batch:** `p26_audit_harness` — implement detectors 3, 5, 6, 8, 9 as a committed script + repo test, so the classes are re-checked on every future client onboarding and every batch close, not just when someone asks.

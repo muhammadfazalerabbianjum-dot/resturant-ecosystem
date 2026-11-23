@@ -1,0 +1,36 @@
+class EngineKey {
+  const EngineKey(this.path, this.readSite);
+
+  final String path;
+  final String readSite;
+}
+
+const List<EngineKey> engineKeys = <EngineKey>[
+  EngineKey(
+    'theme.colors.primary',
+    'packages/core_ui/lib/src/theme/app_theme.dart:346',
+  ),
+  EngineKey(
+    'theme.shape.cardRadius',
+    'packages/core_ui/lib/src/theme/app_theme.dart:457',
+  ),
+  EngineKey(
+    'theme.shape.ctaRadius',
+    'packages/core_ui/lib/src/theme/app_theme.dart:458',
+  ),
+];
+
+const Map<String, Map<String, String>> allowlist =
+    <String, Map<String, String>>{
+  'core_app': <String, String>{
+    'theme.shape.cardRadius':
+        'fixture reason: unset in the template, allowlisted with a written '
+        'reason so detector 6 stays silent for this key.',
+  },
+  'halal_boyz': <String, String>{},
+};
+
+const Map<String, String> shippedConfigs = <String, String>{
+  'core_app': 'assets/client_config.json',
+  'halal_boyz': '../apps/halal_boyz/assets/client_config.json',
+};

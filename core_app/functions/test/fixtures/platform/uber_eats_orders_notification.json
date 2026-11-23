@@ -1,0 +1,10 @@
+{
+  "event_type": "orders.notification",
+  "event_id": "8f0a2d5e-6d1f-4f9a-9c2b-2dd0c5a1b7aa",
+  "meta": {
+    "resource_id": "ORDER123",
+    "resource_href": "https://api.uber.com/v2/eats/order/ORDER123",
+    "status": "created",
+    "store_id": "STORE-HB-01"
+  }
+}

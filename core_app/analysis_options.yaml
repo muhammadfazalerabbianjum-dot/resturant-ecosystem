@@ -1,0 +1,65 @@
+# Analysis options — CARNAMA CONSTITUTION Laws 10, 46
+# Every rule here is a Law. Violations are errors, not warnings.
+# Never relax a rule without a documented reason in this file.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  plugins:
+    - riverpod_lint
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+  errors:
+    depend_on_referenced_packages: ignore
+    # Law 46: async safety — must be fatal
+    unawaited_futures: error
+    use_build_context_synchronously: error
+    # Law 8: empty catches hide Firestore permission errors
+    # avoid_catches_without_on_clauses disabled to permit `catch (_)`
+    empty_catches: error
+    # always_call_super: error
+    throw_in_finally: error
+    # Law 10: print leaks to production logs
+    avoid_print: error
+    # Law 46: dynamic calls mask type errors at runtime
+    avoid_dynamic_calls: error
+    # Law 8: returning null for non-nullable Future is a crash
+    # avoid_returning_null_for_future removed in Dart 3.3.0
+  language:
+    strict-casts: true
+    strict-inference: false
+    strict-raw-types: true
+
+linter:
+  rules:
+    # — Async Safety (Laws 8, 46) ─────────────────────────────────
+    unawaited_futures: true
+    cancel_subscriptions: true
+    close_sinks: true
+    empty_catches: true
+    throw_in_finally: true
+    # — Build Context Safety (Law 8) ──────────────────────────────
+    use_build_context_synchronously: true
+    # — Type Safety (Law 46) ──────────────────────────────────────
+    avoid_dynamic_calls: true
+    avoid_type_to_string: true           # toString() on types fails in minified code
+    # — Production Logging (Law 10) ───────────────────────────────
+    avoid_print: true
+    # — Const / Performance (Law 6) ───────────────────────────────
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_final_locals: true
+    use_super_parameters: true           # Reduces boilerplate, prevents missed params
+    # — Best practices ────────────────────────────────────────────
+    prefer_single_quotes: true
+    always_declare_return_types: true
+    curly_braces_in_flow_control_structures: true
+    eol_at_end_of_file: false
+    avoid_unused_constructor_parameters: true
+    # — Style & Correctness ───────────────────────────────────────
+    unnecessary_null_checks: true
+    exhaustive_cases: true               # Law 34: all enum cases handled
+    no_default_cases: true               # Forces exhaustive switch on enums
+    avoid_shadowing_type_parameters: true
+    use_string_buffers: true             # Prevents O(n²) string concatenation crashes
+

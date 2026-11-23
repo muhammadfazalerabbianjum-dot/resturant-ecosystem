@@ -1,0 +1,11 @@
+# Template for core_app/android/key.properties
+# Fill in your own signing values; NEVER commit key.properties.
+# Consumed by core_app/android/app/build.gradle.kts (storeFile/storePassword/keyAlias/keyPassword).
+# storeFile is relative to core_app/android/app/ (e.g. keystore.jks next to the
+# file, itself also gitignored). Release builds FAIL CLOSED without a complete
+# file. CI materializes this file from the ANDROID_KEYSTORE_BASE64 secret — see
+# docs/RELEASE_RUNBOOK.md.
+storeFile=
+storePassword=
+keyAlias=
+keyPassword=

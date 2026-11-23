@@ -1,0 +1,25 @@
+﻿{
+  "name": "core_app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "prepare": "husky install",
+    "emulators:start": "firebase emulators:start",
+    "test:rules": "firebase emulators:exec --only firestore \"node test/rules/firestore_rules_test.js\"",
+    "test:gdpr": "firebase emulators:exec --only firestore,storage \"node test/functions/gdpr_erasure_test.js\"",
+    "test:money-emulator": "cd functions && npm run build && cd .. && firebase emulators:exec --only firestore,storage \"node functions/scripts/money_emulator_check.js\"",
+    "test:migrations": "cd functions && npm run build && cd .. && firebase emulators:exec --only firestore,auth \"node functions/scripts/v003_migration_emulator_check.js\"",
+    "deploy:backend": "dart run tool/deploy_backend.dart"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "firebase": "^12.18.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0"
+  },
+  "lint-staged": {
+    "*.dart": [
+      "dart format"
+    ]
+  }
+}

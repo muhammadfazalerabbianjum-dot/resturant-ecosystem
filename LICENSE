@@ -1,0 +1,75 @@
+PROPRIETARY — VIEWING ONLY — NO RIGHTS GRANTED
+
+Copyright (c) 2026 Carnama. All rights reserved.
+
+This repository, including all source code, configuration, database rules,
+schemas, designs, documentation, copy, assets and any compiled output (together,
+"the Work"), is proprietary and confidential.
+
+1. THE ONLY PERMITTED ACT IS VIEWING.
+
+   You may read (view) the Work as published. That is the entire extent of what
+   is permitted. Nothing else may be done with the Work, in whole or in part.
+
+   This is not an open-source licence, and it is not a "source-available"
+   licence: no rights are granted and none may be inferred.
+
+2. NO RIGHTS OF ANY KIND ARE GRANTED.
+
+   No licence, right, title or interest in the Work — express or implied, by
+   estoppel, by custom, by course of dealing, or otherwise — is granted to any
+   person who views, accesses, clones, forks, downloads or otherwise obtains the
+   Work.
+
+   Access to the Work, including access through a public repository, is not
+   permission to use it and does not waive any right of the copyright holder.
+
+3. PROHIBITED WITHOUT PRIOR WRITTEN PERMISSION.
+
+   You may not, in whole or in part:
+
+   a. use the Work, or any derivative of it, in any product, service,
+      application, website, backend, or commercial or non-commercial activity;
+   b. copy, reproduce, store, mirror, republish, redistribute or re-host the
+      Work;
+   c. clone, fork, download, archive, scrape or index the Work, or extract it
+      into any other repository, dataset or system;
+   d. modify, adapt, translate, reverse-engineer, decompile or create
+      derivative works from the Work;
+   e. deploy, host, run or operate the Work, or any part of it, including its
+      Cloud Functions, security rules, database schemas or client applications;
+   f. sublicense, sell, rent, lease, lend, assign or otherwise commercially
+      exploit the Work or access to it;
+   g. remove, obscure or alter this notice or any proprietary marking;
+   h. use the Work, or any part of it, to train, fine-tune or evaluate a
+      machine-learning model.
+
+4. PERMISSION REQUESTS.
+
+   Written permission for any use is required in advance and is granted only by
+   a signed agreement from the copyright holder. Contact the repository owner
+   through their GitHub profile. Silence is not permission, and a reply that does
+   not grant a specific right does not grant it.
+
+5. NO WARRANTY.
+
+   THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT
+   SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY ARISING FROM, OUT OF OR IN CONNECTION WITH THE WORK OR THE USE OR
+   OTHER DEALINGS IN THE WORK.
+
+6. ENFORCEMENT.
+
+   Unauthorised use, copying, cloning, deployment or distribution of the Work is
+   a breach of this notice and of applicable copyright law, and the copyright
+   holder reserves all rights and remedies available at law and in equity.
+
+7. THIRD-PARTY COMPONENTS.
+
+   The Work depends on third-party open-source packages that remain under their
+   own licences (see `pubspec.lock` and `core_app/functions/package-lock.json`).
+   Those licences cover those packages only. They do not apply to the Work as a
+   whole, and nothing here grants rights to any third-party component beyond what
+   its own licence provides.

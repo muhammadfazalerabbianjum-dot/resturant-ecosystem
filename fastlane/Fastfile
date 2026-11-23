@@ -1,0 +1,48 @@
+# Carnama Labs — Android release scaffold (RELEASE-1 / W11.1).
+#
+# Lanes use fastlane's `supply` action and rely on
+# `core_app/android/key.properties` for release signing (copy
+# key.properties.template; the file and any *.jks are gitignored and must
+# NEVER be committed).
+#
+# Prerequisites:
+#   - `fastlane` gem (>= 2.150.0)
+#   - `GOOGLE_JSON_KEY_FILE` -> path to a Play Console service-account JSON
+#   - signing keystore materialized at `core_app/android/key.properties`
+#     (CI materializes it from the ANDROID_KEYSTORE_BASE64 secret — see
+#     .github/workflows/carnama_ci.yml and docs/RELEASE_RUNBOOK.md)
+#
+# Full runbook: docs/RELEASE_RUNBOOK.md
+
+default_platform(:android)
+
+platform :android do
+  desc "Build the signed release AAB and upload it to Google Play (internal track)"
+  lane :beta do
+    sh("cd core_app && flutter build appbundle --release")
+    supply(
+      track: "internal",
+      json_key: ENV["GOOGLE_JSON_KEY_FILE"],
+      aab: "core_app/build/app/outputs/bundle/release/app-release.aab",
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Promote the internal-track build to the beta (closed) track"
+  lane :promote do
+    supply(
+      track: "beta",
+      promote_from_track: "internal",
+      json_key: ENV["GOOGLE_JSON_KEY_FILE"],
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: true
+    )
+  end
+end

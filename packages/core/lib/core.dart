@@ -1,0 +1,58 @@
+/// Carnama core package.
+///
+/// Pure domain, data, and services. No UI widgets, no app-specific config.
+library;
+
+export 'src/admin/admin_access_service.dart';
+export 'src/admin/seed_admin.dart';
+export 'src/analytics/analytics_service.dart';
+export 'src/analytics/ecommerce_events.dart';
+export 'src/analytics/telemetry_service.dart';
+export 'src/auth/auth_provider.dart';
+export 'src/auth/auth_repository.dart';
+export 'src/auth/user_model.dart';
+export 'src/cache/isar_local_cache.dart';
+export 'src/cache/isar_schemas.dart';
+export 'src/cache/isar_service.dart';
+export 'src/cache/local_cache.dart';
+export 'src/compliance/gdpr_consent.dart';
+export 'src/compliance/gdpr_service.dart';
+export 'src/config/core_config.dart';
+export 'src/delivery/delivery_platform_adapter.dart';
+export 'src/delivery/ingested_order.dart';
+export 'src/delivery/platform_config.dart';
+export 'src/error_logger/crash_reporter.dart';
+export 'src/error_logger/error_logger_service.dart';
+export 'src/error_logger/firebase_exception_mapper.dart';
+export 'src/error_logger/logger_provider.dart';
+export 'src/error_logger/logger_service.dart';
+export 'src/kitchen/kitchen_offline_service.dart';
+export 'src/kitchen/order_payload.dart';
+export 'src/location/branch_service.dart';
+export 'src/models/delivery_location_model.dart';
+export 'src/models/geo_point_converter.dart';
+export 'src/models/lat_lng_parse.dart';
+export 'src/models/num_to_int_converter.dart';
+export 'src/models/operating_hours_model.dart';
+export 'src/models/promotion_model.dart';
+export 'src/navigation/deep_link_service.dart';
+export 'src/network/chaos_firestore.dart';
+export 'src/network/firestore_client.dart';
+export 'src/network/http_interceptor.dart';
+export 'src/network/network_retry.dart';
+export 'src/network/pending_sync_provider.dart';
+export 'src/network/push_notification_service.dart';
+export 'src/network/sync_queue.dart';
+export 'src/notifications/fcm_service.dart';
+export 'src/payment/fraud_screening_service.dart';
+export 'src/payment/nfc_terminal_service.dart';
+export 'src/presence/presence_model.dart';
+export 'src/presence/presence_service.dart';
+export 'src/providers/firestore_provider.dart';
+export 'src/providers/functions_provider.dart';
+export 'src/schemas/user_schema.dart';
+export 'src/services/cloudinary_thumb.dart';
+export 'src/services/cloudinary_upload_service.dart';
+export 'src/tax/tax_service.dart';
+export 'src/utils/json_converters.dart';
+export 'src/validation/email_rule.dart';

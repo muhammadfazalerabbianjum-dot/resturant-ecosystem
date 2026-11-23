@@ -1,0 +1,26 @@
+# CARNAMA `.clinerules` - Mandatory Architectural Guidelines
+
+You are operating within the Carnama codebase. This environment is under military-grade constraint. You MUST read and follow the `CARNAMA_CONSTITUTION.md` loaded in memory. Furthermore, you are bound by the following non-negotiable execution constraints.
+
+## 1. Absolute Ban on Code Suppression
+- **The Rule**: Never use analyzer suppressors (`// ignore_for_file:` or `// ignore:`). 
+- **The Reason**: Masking errors is an architectural failure. If `flutter analyze` flags `unawaited_futures`, `dynamic` casting, or missing types, you must write the strict static-typed code to resolve it structurally.
+
+## 2. Read Before Refactoring (Preserve APIs)
+- **The Rule**: Before attempting complex refactors (e.g. converting classical models to `@freezed`), you MUST read the original structure entirely. You must perfectly preserve the existing API surface, including custom methods like `fromFirestore` and `toFirestore`.
+- **The Reason**: Destructively overwriting models with blind boilerplate breaks downstream UI screens and tests that rely on specific field names and properties.
+
+## 3. Focus on Raw Implementation (Do Not Fight the Compiler)
+- **The Rule**: Focus primarily on writing robust, architecturally sound logic. Do not waste cycles trying to satisfy pedantic linter warnings like `prefer_const_constructors` or `curly_braces` in a loop.
+- **The Reason**: The Antigravity AI Native Agent will sweep the codebase after you finish and explicitly run `tool/pipeline.dart` to strictly lock down syntax and compilation errors. Your job is the brain, not the broom.
+
+## 4. No "Tedious Task" Skipping
+- **The Rule**: Never skip or abbreviate tedious requirements. If a prompt requires you to scan 20 files for hardcoded strings to implement I18n, or requires hunting down 40 specific hex color injections to replace with semantic variables, you must do them all.
+- **The Reason**: Faking the completion of manual structural work leaves technical debt in the codebase. Do not fabricate fixes.
+
+## 5. Do Not Break the Test Mocks
+- **The Rule**: When you harden services (e.g., implementing strict Singletons using private constructors), you assume responsibility for updating the test suite mocks (`test_helpers`) that depend on those classes.
+- **The Reason**: Tests are first-class citizens. Changing a constructor from public to private breaks `class MockX implements X` interfaces. Fix the tests when you alter the interface.
+
+## 6. Stop Hallucinating Fixes
+- **The Rule**: Always verify your logic mechanically. Never say "I fixed the idempotency bug" if you just regenerated the UUID inside the method instead of passing it from the caller logic. Thoroughly research and construct the *best possible solution*, not the most convenient compilation patch.

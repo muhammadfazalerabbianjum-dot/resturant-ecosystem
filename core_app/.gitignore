@@ -1,0 +1,24 @@
+# Clutter prevention (from audit)
+*.log
+*.iml
+*.iws
+*.dll
+coverage/
+app_logs/
+fix_evidence/
+flutter_deep_analyzer/
+node_modules/
+.aider.*
+.refact/
+.jdk21/
+jdk21/
+
+# Secrets hygiene (CI-2 / W1.3) — never commit secrets.
+*.env
+!.env.example
+*.keystore
+*.jks
+key.properties
+**/failures/
+# gate (d) temp emulator config (tool/emulator_probe.mjs)
+.gate-firebase.json

@@ -1,0 +1,39 @@
+Analyzing core_app...                                           
+
+warning - 'getByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:166:12 - experimental_member_use
+warning - 'getByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:170:12 - experimental_member_use
+warning - 'deleteByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:174:12 - experimental_member_use
+warning - 'deleteByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:178:12 - experimental_member_use
+warning - 'getAllByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:184:12 - experimental_member_use
+warning - 'getAllByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:189:12 - experimental_member_use
+warning - 'deleteAllByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:194:12 - experimental_member_use
+warning - 'deleteAllByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:199:12 - experimental_member_use
+warning - 'putByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:203:12 - experimental_member_use
+warning - 'putByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:207:12 - experimental_member_use
+warning - 'putAllByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:211:12 - experimental_member_use
+warning - 'putAllByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:216:12 - experimental_member_use
+warning - 'getByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1327:12 - experimental_member_use
+warning - 'getByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1331:12 - experimental_member_use
+warning - 'deleteByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1335:12 - experimental_member_use
+warning - 'deleteByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1339:12 - experimental_member_use
+warning - 'getAllByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1344:12 - experimental_member_use
+warning - 'getAllByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1349:12 - experimental_member_use
+warning - 'deleteAllByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1354:12 - experimental_member_use
+warning - 'deleteAllByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1359:12 - experimental_member_use
+warning - 'putByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1363:12 - experimental_member_use
+warning - 'putByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1367:12 - experimental_member_use
+warning - 'putAllByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1371:12 - experimental_member_use
+warning - 'putAllByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1376:12 - experimental_member_use
+  error - The argument type 'CardTheme' can't be assigned to the parameter type 'CardThemeData?'.  - lib\core\theme\app_theme.dart:46:18 - argument_type_not_assignable
+  error - Target of URI doesn't exist: '../../navigation/route_names.dart' - lib\core\ui\animated_cart_badge.dart:5:8 - uri_does_not_exist
+  error - Undefined name 'RouteNames' - lib\core\ui\animated_cart_badge.dart:21:46 - undefined_identifier
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\admin\presentation\admin_menu_manager.dart:63:25 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\locations\presentation\location_screen.dart:45:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loyalty\presentation\loyalty_screen.dart:31:50 - deprecated_member_use
+  error - Target of URI doesn't exist: 'package:labs/features/menu/domain/menu_model.dart' - lib\features\menu\presentation\dish_detail_screen.dart:3:8 - uri_does_not_exist
+  error - Undefined class 'MenuModel' - lib\features\menu\presentation\dish_detail_screen.dart:9:9 - undefined_class
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\profile_screen.dart:52:56 - deprecated_member_use
+warning - Unused import: 'package:google_fonts/google_fonts.dart' - lib\main.dart:4:8 - unused_import
+  error - Target of URI doesn't exist: 'package:labs/features/reorder/domain/reorder_service.dart' - test\features\reorder\reorder_logic_test.dart:3:8 - uri_does_not_exist
+  error - Undefined name 'ReorderService' - test\features\reorder\reorder_logic_test.dart:15:18 - undefined_identifier
+

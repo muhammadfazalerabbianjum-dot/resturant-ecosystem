@@ -1,0 +1,55 @@
+name: Carnama Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { flutter-version: '3.22.0' }
+      - run: flutter pub get
+      - name: Scan for hardcoded secrets (Phase 5.5)
+        run: |
+          set +e
+          SECRETS=$(grep -rn "sk_test_\|sk_live_\|AIzaSy\|api_key\|secret\|password" lib/ --include="*.dart")
+          if [ -n "$SECRETS" ]; then
+            echo "❌ Hardcoded secret found:"
+            echo "$SECRETS"
+            exit 1
+          fi
+          echo "✅ No secrets found"
+
+      - name: Dependency vulnerability audit (Phase 5.6)
+        run: dart pub audit
+          
+      - name: Check Firestore document schema (Phase 7.9)
+        run: dart run tool/check_schema.dart
+        
+      - name: Kill switch rollback smoke test (Phase 9.3)
+        run: flutter test test/rollback/kill_switch_test.dart
+        
+      - name: Verify backend deployment (Phase 13.6)
+        run: chmod +x scripts/verify_backend.sh && ./scripts/verify_backend.sh
+        env:
+          PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          REGION: us-central1
+
+  e2e_test:
+    needs: static-analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { flutter-version: '3.22.0' }
+      - run: flutter pub get
+      - run: npm install -g firebase-tools
+      - run: npm install -g wait-on
+      - run: firebase emulators:start --only firestore,auth,functions & npx wait-on http://localhost:8080
+      - name: Run E2E Local Integration Test (Phase 4.8)
+        run: flutter test integration_test/e2e_flow_test.dart

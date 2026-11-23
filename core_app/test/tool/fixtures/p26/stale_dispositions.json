@@ -1,0 +1,6 @@
+{
+  "d9:NoSuchTokenEver": {
+    "status": "FALSE-POSITIVE",
+    "note": "An intentionally stale declaration that matches no candidate the detectors fire today; the harness warns but does not fail."
+  }
+}

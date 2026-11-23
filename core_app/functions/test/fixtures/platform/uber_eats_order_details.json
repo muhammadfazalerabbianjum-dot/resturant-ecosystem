@@ -1,0 +1,38 @@
+{
+  "id": "ORDER123",
+  "display_id": "#A123",
+  "state": "created",
+  "store_id": "STORE-HB-01",
+  "currency_code": "AED",
+  "cart": {
+    "items": [
+      {
+        "id": "mc_burger_1",
+        "quantity": 2,
+        "price": {
+          "unit_price": {"amount": 2450, "currency_code": "AED"}
+        },
+        "customizations": [
+          {
+            "id": "opt_cheese",
+            "name": "Extra cheese",
+            "price": {"amount": 200, "currency_code": "AED"}
+          }
+        ]
+      },
+      {
+        "id": "mc_fries_1",
+        "quantity": 1,
+        "price": {
+          "unit_price": {"amount": 900, "currency_code": "AED"}
+        },
+        "customizations": []
+      }
+    ]
+  },
+  "payment": {
+    "charges": {
+      "total": {"amount": 6000, "currency_code": "AED"}
+    }
+  }
+}

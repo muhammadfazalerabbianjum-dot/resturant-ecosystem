@@ -1,0 +1,26 @@
+# CARNAMA CODEOWNERS (Law 39 — Code Review Enforcement)
+# Main branch is protected from direct pushes. At minimum one codeowner approval required.
+
+# Default owners for everything
+* @carnama/core-team
+
+# Core infrastructure
+/lib/core/ @carnama/core-team
+/firestore.rules @carnama/core-team
+/storage.rules @carnama/core-team
+/firestore.indexes.json @carnama/core-team
+
+# Feature code
+/lib/features/ @carnama/feature-team
+
+# Tests
+/test/ @carnama/qa-team
+/integration_test/ @carnama/qa-team
+
+# CI/CD
+/tool/ @carnama/devops-team
+/.github/ @carnama/devops-team
+
+# Configuration
+/pubspec.yaml @carnama/core-team
+/analysis_options.yaml @carnama/core-team

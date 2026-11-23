@@ -1,0 +1,28 @@
+00:00 +0: loading <repo>/core_app/test/core/theme/app_theme_test.dart
+00:00 +0: AppTheme psychological palette and typography mapping resolves correctly
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: Color:<Color(alpha: 1.0000, red: 0.1137, green: 0.2078, blue: 0.3412, colorSpace:
+ColorSpace.sRGB)>
+  Actual: <null>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///<repo>/core_app/test/core/theme/app_theme_test.dart:27:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///<repo>/core_app/test/core/theme/app_theme_test.dart line 27
+The test description was:
+  AppTheme psychological palette and typography mapping resolves correctly
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -1: AppTheme psychological palette and typography mapping resolves correctly [E]
+  Test failed. See exception logs above.
+  The test description was: AppTheme psychological palette and typography mapping resolves correctly
+  
+00:00 +0 -1: Some tests failed.

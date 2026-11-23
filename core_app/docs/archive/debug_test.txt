@@ -1,0 +1,2 @@
+00:00 +0: loading <repo>/core_app/test/core/error_logger_test.dart
+Terminate batch job (Y/N)? 

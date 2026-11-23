@@ -1,0 +1,4 @@
+# Exclude Patrol E2E tests from standard flutter test runs
+# Run them separately with: patrol test --target test/e2e/checkout_e2e_test.dart
+exclude:
+  - e2e/**

@@ -1,0 +1,91 @@
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:labs/services/notification_service.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  const channel = MethodChannel('dexterous.com/flutter/local_notifications');
+  final List<MethodCall> log = <MethodCall>[];
+
+  setUp(() {
+    log.clear();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+      log.add(methodCall);
+      switch (methodCall.method) {
+        case 'initialize':
+          return true;
+        case 'show':
+          return true;
+        default:
+          return null;
+      }
+    });
+  });
+
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
+  });
+
+  group('LocalNotificationService', () {
+    test('initialize sends correct method channel call', () async {
+      await LocalNotificationService.initialize();
+
+      expect(log.length, greaterThanOrEqualTo(1));
+      expect(log[0].method, 'initialize');
+    });
+
+    test('showOrderStatusNotification sends show method channel call',
+        () async {
+      await LocalNotificationService.showOrderStatusNotification(
+          'order1', 'Your order is ready');
+
+      expect(log.any((call) => call.method == 'show'), isTrue);
+    });
+
+    test('showOrderStatusNotification includes orderId in payload', () async {
+      await LocalNotificationService.showOrderStatusNotification(
+          'ABC-123', 'Order confirmed');
+
+      final showCall = log.firstWhere((call) => call.method == 'show');
+      expect(showCall.arguments['payload'], 'ABC-123');
+    });
+
+    test('showOrderStatusNotification includes statusMessage in body',
+        () async {
+      await LocalNotificationService.showOrderStatusNotification(
+          'order1', 'Your order has been delivered');
+
+      final showCall = log.firstWhere((call) => call.method == 'show');
+      expect(showCall.arguments[2], 'Your order has been delivered');
+    });
+
+    test('showOrderStatusNotification sends with id 0 (generic notification)',
+        () async {
+      await LocalNotificationService.showOrderStatusNotification(
+          'order1', 'Ready');
+
+      final showCall = log.firstWhere((call) => call.method == 'show');
+      expect(showCall.arguments[0], 0);
+    });
+
+    test('showOrderStatusNotification has title as Order Confirmed',
+        () async {
+      await LocalNotificationService.showOrderStatusNotification(
+          'order1', 'Your order is ready');
+
+      final showCall = log.firstWhere((call) => call.method == 'show');
+      expect(showCall.arguments[1], 'Order Confirmed');
+    });
+
+    test('initialize sets up Android and iOS initialization settings',
+        () async {
+      await LocalNotificationService.initialize();
+
+      expect(log.length, greaterThanOrEqualTo(1));
+      final initCall = log.firstWhere((call) => call.method == 'initialize');
+      expect(initCall.arguments, isNotNull);
+    });
+  });
+}

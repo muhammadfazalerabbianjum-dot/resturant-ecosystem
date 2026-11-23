@@ -1,0 +1,42 @@
+version: 2
+updates:
+  # Law 29: Dart/Flutter pub dependency CVE + outdated scanning
+  - package-ecosystem: "pub"
+    directory: "/core_app"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "security"
+    groups:
+      firebase:
+        patterns:
+          - "firebase*"
+          - "cloud_*"
+      flutter-core:
+        patterns:
+          - "flutter*"
+          - "riverpod*"
+          - "freezed*"
+          - "go_router"
+
+  # Law 29: Node.js / Cloud Functions npm dependency scanning
+  - package-ecosystem: "npm"
+    directory: "/core_app/functions"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "security"
+
+  # Law 29: GitHub Actions dependency scanning (pin action versions)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "ci"

@@ -1,0 +1,45 @@
+name: core_ui
+description: "Carnama core UI package - Flutter widgets and theme."
+version: 0.1.0
+publish_to: 'none'
+resolution: workspace
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Local package
+  core:
+    path: ../core
+
+  # State management
+  flutter_riverpod: ^2.5.1
+
+  # Navigation
+  go_router: ^14.2.0
+
+  # Animations & effects
+  lottie: ^3.3.3
+  confetti: ^0.8.0
+  shimmer: ^3.0.0
+
+  # Styling
+  google_fonts: ^8.0.2
+
+  # Maps
+  flutter_map: ^8.3.0
+  latlong2: ^0.9.1
+  geocoding: ^4.0.0
+  geolocator: ^13.0.0
+
+  # Utilities
+  url_launcher: ^6.3.2
+  shared_preferences: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0

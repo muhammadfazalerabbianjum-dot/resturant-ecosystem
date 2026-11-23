@@ -1,0 +1,23 @@
+{
+  "event": "order.push",
+  "order_id": "DH-556677",
+  "store_id": "carnama-branch-1",
+  "currency": "AED",
+  "products": [
+    {
+      "id": "mc_burger_1",
+      "quantity": 2,
+      "unit_price": "24.50",
+      "options": [{"id": "opt_cheese", "price": "2.00"}]
+    },
+    {
+      "id": "mc_fries_1",
+      "quantity": 1,
+      "unit_price": "9.00",
+      "options": []
+    }
+  ],
+  "order_total": "60.00",
+  "customer": {"name": "Platform Customer", "phone": "+971500000000"},
+  "delivery": {"address": "1 Documented Shape Street"}
+}

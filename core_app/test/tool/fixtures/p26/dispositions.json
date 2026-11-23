@@ -1,0 +1,6 @@
+{
+  "d8:W-7": {
+    "status": "FALSE-POSITIVE",
+    "note": "AUDIT_COHERENCE_LADDER.md:43 records W-7 as '(absent feature, not a gap)': no ratings/reviews feature exists anywhere in the fleet, so there is no presentation surface to assign to a wave. The ladder itself documents it absent-by-design; declared here so detector 8's zero-unassigned matrix stays honest instead of silently omitting the row."
+  }
+}

@@ -1,0 +1,75 @@
+name: core
+description: "Carnama core package - pure domain, data and services."
+version: 0.1.0
+publish_to: 'none'
+resolution: workspace
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  flutter_riverpod: ^2.5.1
+
+  # Local storage / caching
+  # p34 A-fix (16 KB): community fork — same v3 API, 16 KB-aligned binaries.
+  # Generator dropped (source_gen ^4 collides with freezed 2.x chain;
+  # DEFERRED.md D-P34-1).
+  isar_community: ^3.3.2
+  path_provider: ^2.1.5
+
+  # Networking
+  dio: ^5.9.2
+  http: ^1.6.0
+  http_interceptor: any
+
+  # Serialization
+  freezed_annotation: any
+  json_annotation: any
+
+  # Firebase
+  firebase_core: ^4.7.0
+  cloud_firestore: ^6.3.0
+  cloud_functions: ^6.2.0
+  firebase_auth: ^6.4.0
+  # MONEY-3 (W3.5, stopping-ledger justification): the GdprService DEMO mirror
+  # must erase the SAME canonical set as the server Cloud Function, which now
+  # includes Firebase Storage prefixes (proof_of_delivery/{orderId}/* +
+  # avatars/{uid}/*). firebase_storage is a first-party Firebase SDK already in
+  # the workspace (core_app depends on ^13.3.0 and uploads POD photos with it);
+  # it is used here only by the demo-mode deleteMyData path. Pattern mirrors
+  # proof_of_delivery_service.dart (injectable, defaults to FirebaseStorage.instance).
+  firebase_storage: ^13.3.0
+  firebase_analytics: ^12.3.0
+  firebase_messaging: ^16.2.0
+  flutter_local_notifications: ^17.0.0
+  firebase_crashlytics: ^5.2.0
+  firebase_remote_config: ^6.4.0
+
+  # Auth providers
+  google_sign_in: ^6.2.2
+  sign_in_with_apple: ^6.1.4
+
+  # Utilities
+  shared_preferences: any
+  crypto: ^3.0.3
+  uuid: any
+  workmanager: ^0.9.0+3
+  geoflutterfire_plus: ^0.0.34
+  geolocator: ^13.0.0
+  app_links: ^7.0.0
+  image_picker: ^1.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: any
+  freezed: any
+  json_serializable: any
+  # p34 A-fix (16 KB): generator dropped — see DEFERRED.md D-P34-1.
+  mocktail: any
+  fake_cloud_firestore: 4.2.0

@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "000000000000",
+    "firebase_url": "https://demo-tenant-default-rtdb.firebaseio.com",
+    "project_id": "demo-tenant",
+    "storage_bucket": "demo-tenant.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:000000000000:android:b2177c7fda8dcfb67b3288",
+        "android_client_info": {
+          "package_name": "labs.carnama.halalboys"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "000000000000-jfufdr512lr2bgej9fgrbm0bus0ivmav.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEMO-PLACEHOLDER-NOT-A-KEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "000000000000-jfufdr512lr2bgej9fgrbm0bus0ivmav.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

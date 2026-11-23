@@ -1,0 +1,5 @@
+{
+  "accepted": {"status": 200, "body": {"status": "accepted"}},
+  "conflict": {"status": 409, "body": {"status": "rejected", "reason": "catalog_item_unknown"}},
+  "unavailable": {"status": 503, "body": {"status": "unavailable", "reason": "maintenance"}}
+}

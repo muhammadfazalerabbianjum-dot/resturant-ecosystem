@@ -1,0 +1,21 @@
+name: Carnama Release Train (Law 29)
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  fastlane-deploy:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.0'
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Deploy Android Beta
+        run: cd android && fastlane beta
+      - name: Deploy iOS Beta
+        run: cd ios && fastlane beta

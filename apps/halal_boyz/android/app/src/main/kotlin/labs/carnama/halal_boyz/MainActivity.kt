@@ -1,0 +1,5 @@
+package labs.carnama.halal_boyz
+
+import io.flutter.embedding.android.FlutterFragmentActivity
+
+class MainActivity : FlutterFragmentActivity()

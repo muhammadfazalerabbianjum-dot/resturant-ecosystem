@@ -1,0 +1,28 @@
+Analyzing core_app...                                           
+
+warning - 'getByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:166:12 - experimental_member_use
+warning - 'getByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:170:12 - experimental_member_use
+warning - 'deleteByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:174:12 - experimental_member_use
+warning - 'deleteByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:178:12 - experimental_member_use
+warning - 'getAllByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:184:12 - experimental_member_use
+warning - 'getAllByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:189:12 - experimental_member_use
+warning - 'deleteAllByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:194:12 - experimental_member_use
+warning - 'deleteAllByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:199:12 - experimental_member_use
+warning - 'putByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:203:12 - experimental_member_use
+warning - 'putByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:207:12 - experimental_member_use
+warning - 'putAllByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:211:12 - experimental_member_use
+warning - 'putAllByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:216:12 - experimental_member_use
+warning - 'getByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1327:12 - experimental_member_use
+warning - 'getByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1331:12 - experimental_member_use
+warning - 'deleteByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1335:12 - experimental_member_use
+warning - 'deleteByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1339:12 - experimental_member_use
+warning - 'getAllByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1344:12 - experimental_member_use
+warning - 'getAllByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1349:12 - experimental_member_use
+warning - 'deleteAllByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1354:12 - experimental_member_use
+warning - 'deleteAllByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1359:12 - experimental_member_use
+warning - 'putByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1363:12 - experimental_member_use
+warning - 'putByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1367:12 - experimental_member_use
+warning - 'putAllByIndex' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1371:12 - experimental_member_use
+warning - 'putAllByIndexSync' is experimental and could be removed or changed at any time - lib\core\cache\isar_schemas.g.dart:1376:12 - experimental_member_use
+warning - Unused import: 'package:firebase_auth/firebase_auth.dart' - lib\features\cart\presentation\cart_screen.dart:4:8 - unused_import
+

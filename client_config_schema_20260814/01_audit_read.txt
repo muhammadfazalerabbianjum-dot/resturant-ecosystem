@@ -1,0 +1,232 @@
+﻿=== READING AUDIT FILES ===
+# CHANGEABILITY AUDIT REPORT â€” Constitutional Edition v1.0
+
+Generated: 08/14/2026
+Scope: core_app/ monorepo (core_app/lib, packages/core, packages/core_ui, core_app/functions)
+
+---
+
+## 1. Environment Variables
+
+| Key | Source | Default | Domain |
+|-----|--------|---------|--------|
+| `CLOUDINARY_CLOUD_NAME` | `core_app/lib/app/config/env.dart` | `dcqf9qpsq` | Environment / Cloudinary |
+| `CLOUDINARY_UPLOAD_PRESET` | `core_app/lib/app/config/env.dart` | `carnama_unsigned` | Environment / Cloudinary |
+| `STRIPE_PUBLISHABLE_KEY` | `core_app/lib/app/config/env.dart` | `pk_test_REPLACE_ME_USE_DART_DEFINE` | Environment / Payments |
+| `STRIPE_PUBLISHABLE_KEY` | `core_app/lib/main.dart` | `''` (assert non-empty in prod) | Environment / Payments |
+| `RECAPTCHA_WEB_KEY` | `core_app/lib/main.dart` | none (required) | Environment / Firebase AppCheck |
+| `FIREBASE_ANDROID_API_KEY` | `core_app/lib/firebase_options.dart` | none (required, fail-fast) | Environment / Firebase |
+| `FIREBASE_IOS_API_KEY` | `core_app/lib/firebase_options.dart` | none (required, fail-fast) | Environment / Firebase |
+| `APP_NAME` | `core_app/lib/app/config/app_config.dart` | `Carnama` | Environment / App identity |
+| `APP_BUNDLE_ID` | `core_app/lib/app/config/app_config.dart` | `com.carnama.labs` | Environment / App identity |
+| `FIREBASE_PROJECT_ID` | `core_app/lib/app/config/app_config.dart` | `''` | Environment / Firebase |
+| `STORE_ANDROID_URL` | `core_app/lib/app/config/app_config.dart` | `''` | Environment / Store links |
+| `STORE_IOS_URL` | `core_app/lib/app/config/app_config.dart` | `''` | Environment / Store links |
+| `FCM_CHANNEL_DESCRIPTION` | `core_app/lib/app/config/app_config.dart` | `Notifications for your orders` | Environment / Notifications |
+| `_kDevAdminPin` (dev admin PIN) | `packages/core/lib/src/admin/admin_access_service.dart` | via `String.fromEnvironment` | Environment / Admin |
+| `FLUTTER_TEST` | `packages/core_ui/lib/src/theme/app_theme.dart` | `Platform.environment` check | Environment / Test mode |
+
+**Hardcoded Firebase identifiers (NOT env-configurable):**
+- Android appId: `1:000000000000:android:c5922227445dbf14046047`
+- iOS appId: `1:000000000000:ios:095a3a9a945aa096046047`
+- messagingSenderId: `000000000000`
+- iOS clientId: `000000000000-9dhfnulnn6414bvfh40pq8hpiikfsijn.apps.googleusercontent.com`
+- ReCaptcha test key (debug): `6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI`
+
+---
+
+## 2. Firebase Collections & Queries
+
+### Collections referenced in `core_app/lib`
+`settings`, `waitlist`, `loyalty`, `menus`, `promotions`, `branches`, `orders`, `driverLocations`, `users`, `carts`, `reservations`, `presence`, `locations`, `promoCodes`, `promo_usage`, `deliveries`, `reservation_counters`, `reservation_locks`, `menu`, `admins`, `config`, `notification_queue`, `notifications`, `audit_logs`
+
+### Collections referenced in `packages/core`
+`users`, `deletion_requests`, `orders`, `carts`, `reservations`, `presence`, `audit_log`, `settings`, `admins`, `analyticsEvents`, `branches`
+
+### Client-specific filtering fields
+- `branchId` â€” filters `orders`, `menus`, `branches` (per-branch scoping)
+- `customerId` â€” filters `orders`, `reservations`, `waitlist`
+- `userId` â€” keys `waitlist`, `loyalty`, `carts`, `presence`
+- `isActive` / `isMainBranch` / `isDefault` â€” branch selection
+- `assignedDriverId` â€” driver order scoping
+
+### Config documents (per-client runtime config)
+- `settings/restaurantConfig` â€” restaurant identity + operational data
+- `settings/featureFlags` â€” feature flag map
+- `settings/ownerInfo` â€” owner info
+- `settings/defaultOperatingHours` â€” default hours
+- `branches/{branchId}/config/operatingHours` â€” per-branch hours
+
+---
+
+## 3. Tax Rates & Logic
+
+- **Calculation location:** Server-side only â€” Cloud Function `calculateTax` (`core_app/functions/src/index.ts`).
+- **Client:** `packages/core/lib/src/tax/tax_service.dart` calls the `calculateTax` HTTPS callable with `{stateCode, subtotalCents}`. **No client-side tax calculation.** Fail-closed (throws on error).
+- **Hardcoded rates (in Cloud Function source):**
+  - `CA: 0.0725` (7.25%)
+  - `NY: 0.08` (8%)
+  - `TX: 0.0625` (6.25%)
+  - `FL: 0.06` (6%)
+- Unknown state â†’ throws `failed-precondition` (fail-closed, never $0 tax).
+- **Changeability note:** Tax rates are NOT client-configurable at runtime â€” they are hardcoded in the Cloud Function and require a redeploy to change.
+
+---
+
+## 4. Feature Flags
+
+Source: Firestore `settings/featureFlags` (via `core_app/lib/app/config/feature_flags_service.dart`).
+
+| Flag | Default |
+|------|---------|
+| `smartReorder` | true |
+| `loyaltyPoints` | true |
+| `tourMode` | true |
+| `waitlist` | true |
+| `referrals` | true |
+| `deliveryTracking` | true |
+| `promoCode` | true |
+
+Unknown flag â†’ defaults to `false`. Flags are fully client-configurable at runtime via Firestore.
+
+---
+
+## 5. Theme & UI Configuration
+
+### Colors (`packages/core_ui/lib/src/theme/app_colors.dart`)
+| Token | Value |
+|-------|-------|
+| `primary` | `0xFFFF6B00` |
+| `secondary` | `0xFF1D3557` |
+| `accent` | `0xFFF4A261` |
+| `background` | `0xFFFFFFFF` |
+| `surface` | `0xFFFFFFFF` |
+| `textPrimary` | `0xFF1E1E1E` |
+| `textSecondary` | `0xFF9E9E9E` |
+| `error` | `0xFFE53935` |
+| `success` | `0xFF4CAF50` |
+| `warning` | `0xFFFFC107` |
+| `transparent` | `0x00000000` |
+| `background54` | `0x8AFFFFFF` |
+| `background70` | `0xB3FFFFFF` |
+| `textPrimary12` | `0x1F1E1E1E` |
+| `textPrimary45` | `0x731E1E1E` |
+| `textPrimary54` | `0x8A1E1E1E` |
+
+### Fonts
+- All text styles use `fontFamily: 'System'` (`app_theme.dart`).
+
+### Dark theme overrides (`app_theme.dart`)
+- background: `0xFF121212`
+- surface: `0xFF1E1E1E`
+
+### Spacing
+- `AppDimensions` (`app_dimensions.dart`) â€” small padding `8.0` and related tokens.
+
+### Confetti overlay colors (hardcoded, `confetti_overlay.dart`)
+`0xFFE63946`, `0xFF1D3557`, `0xFFF4A261`, `0xFF2A9D8F`
+
+---
+
+## 6. Navigation Routes
+
+Defined in `core_app/lib/app/app_router.dart` (GoRouter) + `core_app/lib/app/navigation/route_names.dart`.
+
+| Route Name | Path |
+|------------|------|
+| splash | `/splash` |
+| onboarding | `/onboarding` |
+| login | `/login` |
+| signup | `/signup` |
+| home | `/` |
+| menu | `/menu` |
+| dishDetail | `/dish/:id` |
+| cart | `/cart` |
+| checkout | `/checkout` |
+| orderTracker | `/orders/:orderId` |
+| orders | `/orders` |
+| reservations | `/reservations` |
+| locations | `/locations` |
+| waitlist | `/waitlist` |
+| loyalty | `/loyalty` |
+| profile | `/profile` |
+| errorLogs | `/error-logs` |
+| admin | `/admin` |
+| adminMenu | `/admin/menu` |
+| roleRouter | `/role-router` |
+| ownerDashboard | `/owner` |
+| managerDashboard | `/manager` |
+| kitchenDashboard | `/kitchen` |
+| deliveryDashboard | `/delivery` |
+| privacy | `/privacy` |
+| terms | `/terms` |
+| deleteAccount | `/delete-account` |
+| logs | `/logs` |
+| adminGateway | `/admin-gateway` |
+
+---
+
+## 7. Screens & Widgets
+
+Screens found in `core_app/lib/features/**/presentation/*_screen.dart`:
+
+1. `SplashScreen` (splash)
+2. `OnboardingScreen` (onboarding)
+3. `LoginScreen` (auth)
+4. `SignupScreen` (auth)
+5. `HomeScreen` (home)
+6. `MenuScreen` (menu)
+7. `DishDetailScreen` (menu)
+8. `CartScreen` (cart)
+9. `CheckoutScreen` (checkout)
+10. `OrderTrackerScreen` (orders)
+11. `OrderHistoryScreen` (orders)
+12. `ReservationScreen` (reservations)
+13. `LocationScreen` (locations)
+14. `PinDropMapScreen` (location)
+15. `WaitlistScreen` (waitlist)
+16. `LoyaltyScreen` (loyalty)
+17. `ProfileScreen` (profile)
+18. `DeliveryTrackerScreen` (tracking)
+19. `DeleteAccountScreen` (compliance)
+20. `TermsOfServiceScreen` (auth)
+21. `PrivacyPolicyScreen` (admin)
+22. `RoleRouterScreen` (admin)
+23. `AdminGatewayScreen` (admin)
+24. `TierFlagManagerScreen` (admin/setup)
+25. `RestaurantSetupScreen` (admin/setup)
+26. `OperatingHoursScreen` (admin/setup)
+
+---
+
+## 8. Changeability Summary
+
+| Domain | Configurable per client? | Mechanism |
+|--------|--------------------------|-----------|
+| Environment (API keys, app name, bundle id) | âœ… Yes | `--dart-define` + `.env` (dotenv) |
+| Firebase project / API keys | âš ï¸ Partial | `FIREBASE_PROJECT_ID` env; appId/senderId hardcoded |
+| Tax rates | âŒ No (server hardcoded) | Cloud Function `calculateTax` â€” redeploy required |
+| Feature flags | âœ… Yes (runtime) | Firestore `settings/featureFlags` |
+| Theme (colors, fonts, spacing) | âš ï¸ Compile-time | `AppColors` / `AppTheme` constants â€” code change required |
+| Navigation routes | âš ï¸ Compile-time | GoRouter `app_router.dart` â€” code change required |
+| Screens | âš ï¸ Compile-time | Feature modules â€” code change required |
+| Restaurant identity/operating hours | âœ… Yes (runtime) | Firestore `settings/restaurantConfig`, `branches/*/config` |
+
+=== RAW ENV ===
+=== ENVIRONMENT VARIABLES ===
+<repo>\core_app\lib\firebase_options.dart:76:final value = String.fromEnvironment(key);
+<repo>\core_app\lib\main.dart:157:const String.fromEnvironment('RECAPTCHA_WEB_KEY'),
+<repo>\core_app\lib\main.dart:192:Stripe.publishableKey = const String.fromEnvironment(
+<repo>\core_app\lib\app\config\app_config.dart:7:return dotenv.env[key] ?? fallback;
+<repo>\core_app\lib\app\config\env.dart:5:static const String cloudinaryCloudName = String.fromEnvironment(
+<repo>\core_app\lib\app\config\env.dart:9:static const String cloudinaryUploadPreset = String.fromEnvironment(
+<repo>\core_app\lib\app\config\env.dart:15:static const String stripePublishableKey = String.fromEnvironment(
+<repo>\packages\core\lib\src\admin\admin_access_service.dart:13:const String _kDevAdminPin = String.fromEnvironment(
+<repo>\packages\core_ui\lib\src\theme\app_theme.dart:20:return Platform.environment.containsKey('FLUTTER_TEST');
+=== AVAILABLE AUDIT DIR FILES (02-07 absent; report consolidates sections 1-7) ===
+00_start.sha256
+00_start.txt
+01_env.txt
+CHANGEABILITY_AUDIT_REPORT.md
+client_config_template.json
+SUMMARY.md

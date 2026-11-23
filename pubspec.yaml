@@ -1,0 +1,36 @@
+name: carnama_monorepo
+description: "Carnama monorepo workspace."
+publish_to: 'none'
+
+environment:
+  sdk: ^3.11.0
+
+dev_dependencies:
+  melos: ^8.2.2
+
+workspace:
+  - core_app
+  - apps/halal_boyz
+  - packages/core
+  - packages/core_ui
+
+melos:
+  scripts:
+    analyze:
+      exec: flutter analyze
+    test:
+      exec: flutter test --coverage
+    gen:
+      exec: dart run build_runner build --delete-conflicting-outputs
+
+dependency_overrides:
+  cli_util: 0.5.2
+  # p34 gen_proof: image 4.11.0 (pulled by flutter_launcher_icons /
+  # flutter_native_splash) declares archive ^4.0.9 but calls
+  # ZLibDecoder().decodeLazy(), added in archive 4.4.x. Against the resolved
+  # archive 4.0.9 the launcher tools fail to compile (exit 75). archive 4.5.2
+  # has decodeLazy, depends only on path+posix (no xml/meta cascade), and
+  # stays within image's ^4.0.9 constraint. package:archive is consumed only
+  # by those dev-tools; zero lib/test code imports it, so app behaviour is
+  # unaffected.
+  archive: 4.5.2

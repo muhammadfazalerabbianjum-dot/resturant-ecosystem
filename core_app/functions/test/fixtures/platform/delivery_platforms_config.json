@@ -1,0 +1,71 @@
+{
+  "_note": "UI-9 (p19) L3 parity fixture. The SAME file drives the Dart runtime validator (core_app/test/app/config/delivery_platforms_test.dart + packages/core), the generator mirror (core_app/tool/whitelabel.dart) and the server selector (functions/src/platform_ingestion.ts selectEnabledPlatforms). Every case must agree.",
+  "valid": {
+    "deliveryPlatforms": [
+      {
+        "id": "uber_eats",
+        "enabled": true,
+        "credentialRef": "UBER_EATS_WEBHOOK_SECRET",
+        "storeId": "STORE-HB-01"
+      },
+      {"id": "delivery_hero", "enabled": false, "storeId": "carnama-branch-1"}
+    ]
+  },
+  "disabled": {
+    "deliveryPlatforms": [
+      {"id": "uber_eats", "enabled": false, "storeId": "STORE-HB-01"}
+    ]
+  },
+  "absent": {},
+  "unknown_id": {
+    "deliveryPlatforms": [
+      {
+        "id": "doordash",
+        "enabled": true,
+        "credentialRef": "DOORDASH_SECRET",
+        "storeId": "s"
+      }
+    ]
+  },
+  "missing_store_when_enabled": {
+    "deliveryPlatforms": [
+      {
+        "id": "delivery_hero",
+        "enabled": true,
+        "credentialRef": "DELIVERY_HERO_WEBHOOK_SECRET"
+      }
+    ]
+  },
+  "secret_literal": {
+    "deliveryPlatforms": [
+      {
+        "id": "delivery_hero",
+        "enabled": true,
+        "credentialRef": "sk_live_example_not_a_real_key",
+        "storeId": "carnama-branch-1"
+      }
+    ]
+  },
+  "duplicate_id": {
+    "deliveryPlatforms": [
+      {
+        "id": "uber_eats",
+        "enabled": true,
+        "credentialRef": "UBER_EATS_WEBHOOK_SECRET",
+        "storeId": "A"
+      },
+      {"id": "uber_eats", "enabled": false, "storeId": "B"}
+    ]
+  },
+  "not_a_list": {"deliveryPlatforms": {"id": "uber_eats"}},
+  "non_bool_enabled": {
+    "deliveryPlatforms": [
+      {
+        "id": "uber_eats",
+        "enabled": "yes",
+        "credentialRef": "UBER_EATS_WEBHOOK_SECRET",
+        "storeId": "STORE-HB-01"
+      }
+    ]
+  }
+}

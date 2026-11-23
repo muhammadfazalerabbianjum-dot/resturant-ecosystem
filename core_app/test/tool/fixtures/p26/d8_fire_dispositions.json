@@ -1,0 +1,14 @@
+{
+  "d8:M-2": {
+    "status": "SPEC'D",
+    "note": "Fixture: ladder §6 and the spec territory claim both name M-2; declared so the harness test pins the conflict path with exit 0."
+  },
+  "d8:M-3": {
+    "status": "OPERATOR-ACCEPTED",
+    "note": "Fixture: no ownership source names M-3; declared so the harness test pins the unassigned-row path with exit 0."
+  },
+  "d8:M-4": {
+    "status": "FALSE-POSITIVE",
+    "note": "Fixture: owner p96_ghost has no WHITE_LABEL file on disk; declared so the harness test pins the missing-owner-file path with exit 0."
+  }
+}

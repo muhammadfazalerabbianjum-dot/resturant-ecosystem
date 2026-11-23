@@ -1,0 +1,18 @@
+# Test configuration with tiered exclusions
+# Standard run: flutter test --exclude-tags=e2e,nightly,needs-emulator
+
+  
+# Global tag definitions
+tags:
+  e2e:
+    # Patrol integration tests - run with: patrol test
+  nightly:
+    # Slow tests - run only in nightly CI
+  gate_fast:
+    # P0-1: fast smoke set - the only tests gate (b) runs on every card.
+    # Selected with: flutter test --tags gate_fast
+  needs-emulator:
+    # Firebase platform channel tests - require Firebase emulator
+
+# Platform-specific overrides
+platform: vm

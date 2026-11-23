@@ -1,0 +1,60 @@
+# Known-stale expectations in test/rules/firestore_rules_test.js (gate k ratchet).
+# One assertion label per line, exactly as the harness prints it.
+# Prune an entry when the assertion starts passing; never add an entry
+# to silence a failure introduced by the change under test.
+B8-6: promo_usage own-list (where userId == uid) → ALLOW
+B8-6: reservation_locks own-list (where userId == uid) → ALLOW
+B8-6: reservations own-list (where userId == uid) → ALLOW
+B8-6: waitlist own-list (where userId == uid) → ALLOW
+T-D1: customer reads OWN notification doc → ALLOW
+T-D3: customer reads OWN notification item → ALLOW
+T-D6: manager reads notification_queue → ALLOW
+T-D8: owner writes notification_queue → ALLOW (owner-gated demo)
+T-E0: customer creates + updates reservation_counters → ALLOW
+T-E1: customer creates + updates waitlist_counters → ALLOW
+T-E2: owner deletes location → ALLOW
+T-E2: owner writes location (valid shape) → ALLOW
+T-E2: same-branch manager writes location (coordinates/list) → ALLOW
+T-E2: signed-in user reads locations → ALLOW
+T16: Manager updates menus priceCents → ALLOW
+T25: Owner writes promoCodes → ALLOW
+T28: Customer creates own deletion_requests → ALLOW
+T2: Unauthenticated read menus/x → ALLOW
+T31: relaxed + app_id only → ALLOW
+T32: relaxed + token only → ALLOW
+T34: strict + both → ALLOW
+T37: relaxed restored after strict → ALLOW
+T5: Self-register role:customer → ALLOW
+T7: owner updates a FRESH user role → ALLOW
+W1-T1: customer reads own carts doc → ALLOW
+W1-T8: manager branch-only waitlist query → ALLOW (control)
+b10-T14: manager reads promoCodes → ALLOW
+b10-T15: analytics real payload (8 props) → ALLOW
+b10-T17: analytics exactly 10 property keys → ALLOW
+b10-T19: owner reads presence → ALLOW
+b10-T20: same-branch kitchen reads presence → ALLOW
+b10-T22: kitchen writes own presence (real payload) → ALLOW
+b10-T27: customer reads own loyalty → ALLOW
+b10-T29: loyalty update CF shape → ALLOW
+b10-T35: app-verified waitlist create → ALLOW (no regression)
+b10-T8: myOrders composite list query → ALLOW
+b22-T1: manager 24h history query (+orderBy desc +limit 200) -> ALLOW
+b22-T2: kitchen FIFO query (status IN +orderBy createdAt +limit 200) -> ALLOW
+b22-T3: driver bounded myOrders query (+limit 100) -> ALLOW
+b22-T4: global menu null-branch query (+limit 500) -> ALLOW
+b5-T1: app-verified customer reads+writes own cart -> ALLOW
+b5-T3: cart write with app_check_token only (relaxed OR) -> ALLOW
+mo-T1: unauthenticated menu_overrides read -> ALLOW (mirrors menus)
+mo-T2: app-verified customer menu_overrides read -> ALLOW
+mo-T3: owner creates valid menu_overrides doc -> ALLOW
+mo-T4: branch-1 manager creates valid overlay -> ALLOW
+p29-T1a: ownerInfo present + matching token email → branches write ALLOW
+t2-T2: customer reads branches/{bid}/waitlist_meta -> ALLOW
+t2-T3: customer join transaction writes waitlist_meta -> ALLOW
+t2-T5: staff serve advances waitlist_meta -> ALLOW (control)
+t78-CTL2: flagged driver creates driverLocations/self -> ALLOW
+t78-CTL4: flagged owner creates branches doc -> ALLOW
+t78-CTL5: flagged owner writes branch config -> ALLOW
+t78-CTL6: flagged owner creates promotions -> ALLOW
+t78-CTL7: flagged owner creates promoCodes -> ALLOW
+t78-CTL9: flagged owner creates notification_queue -> ALLOW

@@ -1,0 +1,194 @@
+{
+  "_meta": {
+    "schemaVersion": "1.0.0",
+    "purpose": "Complete validated JSON template capturing every configurable aspect of a client app, derived from the Changeability Audit (<audit-folder>\\CHANGEABILITY_AUDIT_REPORT.md) and direct code inspection.",
+    "generated": "2026-08-14",
+    "constitution": "Carnama Constitutional Edition v1.0"
+  },
+  "tenantId": "halal_boyz",
+  "app": {
+    "icon": "app_icon.png",
+    "name": "Halal Boyz",
+    "bundleId": "labs.carnama.halalboys",
+    "storeAndroidUrl": "",
+    "storeIosUrl": "",
+    "fcmChannelDescription": "Notifications for your orders"
+  },
+  "currency": {
+    "code": "USD",
+    "symbol": ""
+  },
+  "environment": {
+    "cloudinaryCloudName": "demo-cloudinary",
+    "cloudinaryUploadPreset": "",
+    "kitchenLanEndpoint": "",
+    "stripePublishableKey": "pk_test_REPLACE_ME_USE_DART_DEFINE",
+    "firebaseAndroidApiKey": "AIzaSyDEMO-PLACEHOLDER-NOT-A-KEY",
+    "firebaseIosApiKey": "AIzaSyDEMO-PLACEHOLDER-NOT-A-KEY",
+    "devAdminPin": ""
+  },
+  "firebase": {
+    "projectId": "demo-tenant",
+    "androidAppId": "1:000000000000:android:b2177c7fda8dcfb67b3288",
+    "iosAppId": "1:000000000000:ios:d67c1144f07cbf1d7b3288",
+    "messagingSenderId": "000000000000",
+    "storageBucket": "demo-tenant.firebasestorage.app",
+    "iosClientId": "000000000000-8l7mhrv13vgpc474v9m4n8mb5bohcu6f.apps.googleusercontent.com"
+  },
+  "features": {
+    "source": "settings/featureFlags",
+    "flags": {
+      "smartReorder": true,
+      "loyaltyPoints": true,
+      "tourMode": true,
+      "waitlist": true,
+      "deliveryTracking": true,
+      "promoCode": true
+    },
+    "unknownFlagDefault": false
+  },
+  "theme": {
+    "injection": "local-config-file",
+    "typography": {
+      "fontFamily": "Inter",
+      "headingFont": "PlayfairDisplay",
+      "bodyFont": "Inter",
+      "headlineSize": 24.0,
+      "titleSize": 20.0,
+      "bodySize": 14.0,
+      "captionSize": 12.0
+    },
+    "shape": {
+      "cardRadius": 16.0,
+      "ctaRadius": 100.0,
+      "smallRadius": 8.0
+    },
+    "components": {
+      "navigationBar": {
+        "background": "0xFF1A1A1A",
+        "activeColor": "0xFFFFA500"
+      },
+      "input": {
+        "fillColor": "0xFFFFFFFF",
+        "borderColor": "0xFF900000",
+        "radius": 8.0
+      },
+      "chip": {
+        "radius": 100.0
+      }
+    },
+    "background": {
+      "color": "0xFFF9F9F9",
+      "overlayAsset": null
+    },
+    "colors": {
+      "primary": "0xFF900000",
+      "secondary": "0xFFFFA500",
+      "accent": "0xFFFFA500",
+      "background": "0xFFF9F9F9",
+      "surface": "0xFFFFFFFF",
+      "textPrimary": "0xFF111111",
+      "textSecondary": "0xFF666666",
+      "error": "0xFFE60000",
+      "success": "0xFF2E7D32",
+      "warning": "0xFFFFC107",
+      "soldOut": "0xFF616161",
+      "transparent": "0x00000000",
+      "background54": "0x8AFFFFFF",
+      "background70": "0xB3FFFFFF",
+      "textPrimary12": "0x1F111111",
+      "textPrimary45": "0x73111111",
+      "textPrimary54": "0x8A111111"
+    },
+    "darkTheme": {
+      "background": "0xFF121212",
+      "surface": "0xFF1E1E1E"
+    },
+    "signature": {
+      "style": "rule"
+    },
+    "confettiOverlay": {
+      "colors": ["0xFF900000", "0xFFFFA500", "0xFFFFC107", "0xFF2E7D32"]
+    },
+    "spacing": {
+      "smallPadding": 8.0,
+      "mediumPadding": 16.0,
+      "largePadding": 24.0
+    }
+  },
+  "navigation": {
+    "entryPoint": "/",
+    "tabs": ["/", "/menu", "/orders", "/reservations", "/profile"],
+    "hiddenRoutes": [
+      "/admin",
+      "/admin/menu",
+      "/role-router",
+      "/owner",
+      "/manager",
+      "/kitchen",
+      "/delivery",
+      "/error-logs",
+      "/logs",
+      "/admin-gateway"
+    ],
+    "routes": {
+      "splash": "/splash",
+      "onboarding": "/onboarding",
+      "login": "/login",
+      "signup": "/signup",
+      "home": "/",
+      "menu": "/menu",
+      "dishDetail": "/dish/:id",
+      "cart": "/cart",
+      "checkout": "/checkout",
+      "orderTracker": "/orders/:orderId",
+      "orders": "/orders",
+      "reservations": "/reservations",
+      "locations": "/locations",
+      "waitlist": "/waitlist",
+      "loyalty": "/loyalty",
+      "profile": "/profile",
+      "errorLogs": "/error-logs",
+      "admin": "/admin",
+      "adminMenu": "/admin/menu",
+      "roleRouter": "/role-router",
+      "ownerDashboard": "/owner",
+      "managerDashboard": "/manager",
+      "kitchenDashboard": "/kitchen",
+      "deliveryDashboard": "/delivery",
+      "privacy": "/privacy",
+      "terms": "/terms",
+      "deleteAccount": "/delete-account",
+      "logs": "/logs",
+      "adminGateway": "/admin-gateway"
+    }
+  },
+  "screens": [
+    { "id": "SplashScreen", "route": "/splash" },
+    { "id": "OnboardingScreen", "route": "/onboarding" },
+    { "id": "LoginScreen", "route": "/login" },
+    { "id": "SignupScreen", "route": "/signup" },
+    { "id": "HomeScreen", "route": "/" },
+    { "id": "MenuScreen", "route": "/menu" },
+    { "id": "DishDetailScreen", "route": "/dish/:id" },
+    { "id": "CartScreen", "route": "/cart" },
+    { "id": "CheckoutScreen", "route": "/checkout" },
+    { "id": "OrderTrackerScreen", "route": "/orders/:orderId" },
+    { "id": "OrderHistoryScreen", "route": "/orders" },
+    { "id": "ReservationScreen", "route": "/reservations" },
+    { "id": "LocationScreen", "route": "/locations" },
+    { "id": "PinDropMapScreen", "route": "/location/map" },
+    { "id": "WaitlistScreen", "route": "/waitlist" },
+    { "id": "LoyaltyScreen", "route": "/loyalty" },
+    { "id": "ProfileScreen", "route": "/profile" },
+    { "id": "DeliveryTrackerScreen", "route": "/tracking/:orderId" },
+    { "id": "DeleteAccountScreen", "route": "/delete-account" },
+    { "id": "TermsOfServiceScreen", "route": "/terms" },
+    { "id": "PrivacyPolicyScreen", "route": "/privacy" },
+    { "id": "RoleRouterScreen", "route": "/role-router" },
+    { "id": "AdminGatewayScreen", "route": "/admin-gateway" },
+    { "id": "TierFlagManagerScreen", "route": "/admin/setup/tier-flags" },
+    { "id": "RestaurantSetupScreen", "route": "/admin/setup/restaurant" },
+    { "id": "OperatingHoursScreen", "route": "/admin/setup/hours" }
+  ]
+}

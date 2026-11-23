@@ -1,0 +1,3 @@
+const String registerSelfPath = 'core_app/test/tool/x.dart';
+
+const List<KeyRow> dispositionRegister = <KeyRow>[];

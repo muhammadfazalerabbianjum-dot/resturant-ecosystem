@@ -1,0 +1,19 @@
+enum KeyDisposition {
+  wiredBy,
+  intentionalInert,
+  removeHandoff,
+}
+
+class KeyRow {
+  const KeyRow({required this.path, required this.disposition});
+
+  final String path;
+  final KeyDisposition disposition;
+}
+
+const List<KeyRow> dispositionRegister = <KeyRow>[
+  KeyRow(
+    path: 'theme.shape.ctaRadius',
+    disposition: KeyDisposition.intentionalInert,
+  ),
+];
